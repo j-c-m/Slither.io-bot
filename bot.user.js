@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.5
+// @version      1.1.6
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -31,7 +31,7 @@ window.getSnakeLength = function() {
 };
 window.getSnakeWidth = function(sc) {
     if (sc === undefined) sc = window.snake.sc;
-    return Math.ceil(sc * 29);
+    return sc * 29;
 };
 
 var canvas = (function() {
@@ -507,25 +507,25 @@ var bot = (function() {
             var headCircle = {
                 x: window.snake.xx,
                 y: window.snake.yy,
-                radius: ra / 2
+                radius: ra / 2 * window.getSnakeWidth() / 2
             };
 
             var forwardCircle = {
-                x: window.snake.xx + window.snake.cos * ra / 2,
-                y: window.snake.yy + window.snake.sin * ra / 2,
-                radius: ra / 2
+                x: window.snake.xx + window.snake.cos * ra / 2 * window.getSnakeWidth() / 2,
+                y: window.snake.yy + window.snake.sin * ra / 2 * window.getSnakeWidth() / 2,
+                radius: ra / 2 * window.getSnakeWidth() / 2
             };
 
             var forwardBigCircle = {
-                x: window.snake.xx + window.snake.cos * r * 1.9 / window.getSnakeWidth() * window.getSnakeWidth(1),
-                y: window.snake.yy + window.snake.sin * r * 1.9 / window.getSnakeWidth() * window.getSnakeWidth(1),
-                radius: r * 2.4 / window.getSnakeWidth() * window.getSnakeWidth(1)
+                x: window.snake.xx + window.snake.cos * r * 1.9 * window.getSnakeWidth() / 2,
+                y: window.snake.yy + window.snake.sin * r * 1.9 * window.getSnakeWidth() / 2,
+                radius: r * 2.4 * window.getSnakeWidth(1) / 2
             };
 
             var fullHeadCircle = {
-                x: window.snake.xx + window.snake.cos * r / 2,
-                y: window.snake.yy + window.snake.sin * r / 2,
-                radius: r
+                x: window.snake.xx + window.snake.cos * r / 2 * window.getSnakeWidth() / 2,
+                y: window.snake.yy + window.snake.sin * r / 2 * window.getSnakeWidth() / 2,
+                radius: r * window.getSnakeWidth() / 2
             };
             
             var sidecircle_r = {
@@ -703,7 +703,7 @@ var bot = (function() {
         // Called by the window loop, this is the main logic of the bot.
         thinkAboutGoals: function() {
             // If no enemies or obstacles, go after what you are going after
-            if (!bot.checkCollision(window.getSnakeWidth() / 2 * window.collisionRadiusMultiplier) ) {
+            if (!bot.checkCollision(window.collisionRadiusMultiplier) ) {
                 window.setAcceleration(0);
                 // Save CPU by only calculating every Nth frame
                 if (++bot.tickCounter >= 15) {
