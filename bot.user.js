@@ -3,11 +3,11 @@ The MIT License (MIT)
  Copyright (c) 2016 Jesse Miller <jmiller@jmiller.com>
  Copyright (c) 2016 Ermiya Eskandary & Théophile Cailliau and other contributors
  https://jmiller.mit-license.org/
- */
+*/
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.4
+// @version      1.1.5
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -31,7 +31,7 @@ window.getSnakeLength = function() {
 };
 window.getSnakeWidth = function(sc) {
     if (sc === undefined) sc = window.snake.sc;
-    return sc * 29;
+    return Math.ceil(sc * 29);
 };
 
 var canvas = (function() {
