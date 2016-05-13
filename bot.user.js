@@ -21,7 +21,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.2
+// @version      1.1.3
 // @description  Slither.io bot
 // @author       Ermiya Eskandary & Théophile Cailliau
 // @contributor  Jesse Miller
@@ -460,7 +460,7 @@ var bot = (function() {
             for (var snake = 0, ls = window.snakes.length; snake < ls; snake++) {
                 scPoint = undefined;
 
-                if (window.snakes[snake].nk != window.snake.nk) {
+                if (window.snakes[snake].id != window.snake.id) {
                     if (window.visualDebugging) {
                         var hCircle = {
                             x: window.snakes[snake].xx,
