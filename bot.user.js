@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.15
+// @version      1.1.17
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -494,13 +494,14 @@ var bot = (function() {
         // Checks to see if you are going to collide with anything in the collision detection radius
         checkCollision: function (r) {
             if (!window.collisionDetection) return false;
+            
+            r = Number(r);
+            var xx = Number(window.snake.xx.toFixed(3));
+            var yy = Number(window.snake.yy.toFixed(3));
 
             window.snake.cos = Math.cos(window.snake.ang).toFixed(3);
             window.snake.sin = Math.sin(window.snake.ang).toFixed(3);
             
-            window.snake.xx = window.snake.xx.toFixed(3);
-            window.snake.yy = window.snake.yy.toFixed(3);
-
             var ra = r;
             var inBigCircle = 0;
             var bigCirclePts = [];
@@ -508,26 +509,26 @@ var bot = (function() {
             if (window.snake.sp > 7) ra = r * 2;
 
             var headCircle = {
-                x: window.snake.xx,
-                y: window.snake.yy,
+                x: xx,
+                y: yy,
                 radius: ra / 2 * window.getSnakeWidth() / 2
             };
 
             var forwardCircle = {
-                x: window.snake.xx + window.snake.cos * ra / 2 * window.getSnakeWidth() / 2,
-                y: window.snake.yy + window.snake.sin * ra / 2 * window.getSnakeWidth() / 2,
+                x: xx + window.snake.cos * ra / 2 * window.getSnakeWidth() / 2,
+                y: yy + window.snake.sin * ra / 2 * window.getSnakeWidth() / 2,
                 radius: ra / 2 * window.getSnakeWidth() / 2
             };
 
             var forwardBigCircle = {
-                x: window.snake.xx + window.snake.cos * r * 1.9 * window.getSnakeWidth(1) / 2,
-                y: window.snake.yy + window.snake.sin * r * 1.9 * window.getSnakeWidth(1) / 2,
+                x: xx + window.snake.cos * r * 1.9 * window.getSnakeWidth(1) / 2,
+                y: yy + window.snake.sin * r * 1.9 * window.getSnakeWidth(1) / 2,
                 radius: r * 2.4 * window.getSnakeWidth(1) / 2
             };
 
             var fullHeadCircle = {
-                x: window.snake.xx + window.snake.cos * r / 2 * window.getSnakeWidth() / 2,
-                y: window.snake.yy + window.snake.sin * r / 2 * window.getSnakeWidth() / 2,
+                x: xx + window.snake.cos * r / 2 * window.getSnakeWidth() / 2,
+                y: yy + window.snake.sin * r / 2 * window.getSnakeWidth() / 2,
                 radius: r * window.getSnakeWidth() / 2
             };
             
@@ -603,7 +604,7 @@ var bot = (function() {
             }
 
             if (inBigCircle > 2) {
-                bot.avoidCollisionPoint({ xx: window.snake.xx + window.snake.cos * 50, yy: window.snake.yy + window.snake.sin * 50 });
+                bot.avoidCollisionPoint({ xx: xx + window.snake.cos * 50, yy: yy + window.snake.sin * 50 });
                 if (window.visualDebugging) {
                     canvas.drawCircle(canvas.circleMapToCanvas(forwardBigCircle), 'yellow', true, 0.3);
                 }
@@ -619,7 +620,7 @@ var bot = (function() {
                 if (bigCirclePts.findIndex(function (p) {
                     return p.distance > forwardBigCircle.radius * forwardBigCircle.radius;
                 }) + 1 > 40) {
-                    bot.avoidCollisionPoint({ xx: window.snake.xx + window.snake.cos * 50, yy: window.snake.yy + window.snake.sin * 50 });
+                    bot.avoidCollisionPoint({ xx: xx + window.snake.cos * 50, yy: yy + window.snake.sin * 50 });
                     if (window.visualDebugging) {
                         canvas.drawCircle(canvas.circleMapToCanvas(forwardBigCircle), 'blue', true, 0.3);
                     }
