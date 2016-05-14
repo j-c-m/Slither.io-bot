@@ -31,7 +31,7 @@ window.getSnakeLength = function() {
 };
 window.getSnakeWidth = function(sc) {
     if (sc === undefined) sc = window.snake.sc;
-    return sc * 29;
+    return sc * 29.0;
 };
 
 var canvas = (function() {
@@ -253,9 +253,9 @@ var canvas = (function() {
                 circle1.x < circle2.x + bothRadii &&
                 circle1.y < circle2.y + bothRadii) {
 
-                var distance = canvas.getDistance(circle1.x,circle1.y,circle2.x,circle2.y);
+                var distance2 = canvas.getDistance2(circle1.x,circle1.y,circle2.x,circle2.y);
 
-                if (distance < bothRadii) {
+                if (distance2 < bothRadii*bothRadii) {
                     if (window.visualDebugging) {
                         var collisionPointCircle = {
                             x: ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / bothRadii,
