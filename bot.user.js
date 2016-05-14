@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.10
+// @version      1.1.11
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -248,8 +248,8 @@ var canvas = (function() {
             if (distance < Math.pow(circle1.radius + circle2.radius, 2)) {
                 if (window.visualDebugging) {
                     var collisionPointCircle = {
-                        x: ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / bothRadii,
-                        y: ((circle1.y * circle2.radius) + (circle2.y * circle1.radius)) / bothRadii,
+                        x: ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / (circle1.radius+circle2.radius),
+                        y: ((circle1.y * circle2.radius) + (circle2.y * circle1.radius)) / (circle1.radius+circle2.radius),
                         radius: 5
                     };
                     canvas.drawCircle(canvas.circleMapToCanvas(circle2), 'red', true);
