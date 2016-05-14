@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.6
+// @version      1.1.7
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -31,7 +31,7 @@ window.getSnakeLength = function() {
 };
 window.getSnakeWidth = function(sc) {
     if (sc === undefined) sc = window.snake.sc;
-    return sc * 29;
+    return sc * 29.0;
 };
 
 var canvas = (function() {
@@ -517,8 +517,8 @@ var bot = (function() {
             };
 
             var forwardBigCircle = {
-                x: window.snake.xx + window.snake.cos * r * 1.9 * window.getSnakeWidth() / 2,
-                y: window.snake.yy + window.snake.sin * r * 1.9 * window.getSnakeWidth() / 2,
+                x: window.snake.xx + window.snake.cos * r * 1.9 * window.getSnakeWidth(1) / 2,
+                y: window.snake.yy + window.snake.sin * r * 1.9 * window.getSnakeWidth(1) / 2,
                 radius: r * 2.4 * window.getSnakeWidth(1) / 2
             };
 
