@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.9
+// @version      1.1.15
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -497,6 +497,9 @@ var bot = (function() {
 
             window.snake.cos = Math.cos(window.snake.ang).toFixed(3);
             window.snake.sin = Math.sin(window.snake.ang).toFixed(3);
+            
+            window.snake.xx = window.snake.xx.toFixed(3);
+            window.snake.yy = window.snake.yy.toFixed(3);
 
             var ra = r;
             var inBigCircle = 0;
