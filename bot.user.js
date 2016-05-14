@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.17
+// @version      1.2.0
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -78,11 +78,23 @@ var canvas = (function() {
         // Radius also needs to scale by .gsc
         circleMapToCanvas: function (circle) {
             var newCircle = canvas.mapToCanvas(circle);
-            return {
-                x: newCircle.x,
-                y: newCircle.y,
-                radius: circle.radius * window.gsc
+            return canvas.circle(
+                newCircle.x,
+                newCircle.y,
+                circle.radius * window.gsc
+            );
+        },
+        
+        // Constructor for circle type
+        circle: function(x,y,r)
+        {
+            var c = {
+                x: Math.round(x),
+                y: Math.round(y),
+                radius: Math.round(r),
             };
+            
+            return c;
         },
 
         // Adjusts zoom in response to the mouse wheel.
@@ -124,12 +136,15 @@ var canvas = (function() {
         drawCircle: function(circle, colour, fill, alpha) {
             if (alpha === undefined) alpha = 1;
             if (circle.radius === undefined) circle.radius = 5;
+            
             var context = window.mc.getContext('2d');
+            var drawCircle = canvas.circleMapToCanvas(circle);
+            
             context.save();
             context.globalAlpha = alpha;
             context.beginPath();
             context.strokeStyle = colour;
-            context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+            context.arc(drawCircle.x, drawCircle.y, drawCircle.radius, 0, Math.PI * 2);
             context.stroke();
             if (fill) {
                 context.fillStyle = colour;
@@ -257,13 +272,13 @@ var canvas = (function() {
 
                 if (distance2 < bothRadii*bothRadii) {
                     if (window.visualDebugging) {
-                        var collisionPointCircle = {
-                            x: ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / bothRadii,
-                            y: ((circle1.y * circle2.radius) + (circle2.y * circle1.radius)) / bothRadii,
-                            radius: 5
-                        };
-                        canvas.drawCircle(canvas.circleMapToCanvas(circle2), 'red', true);
-                        canvas.drawCircle(canvas.circleMapToCanvas(collisionPointCircle), 'cyan', true)
+                        var collisionPointCircle = canvas.circle(
+                            ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / bothRadii,
+                            ((circle1.y * circle2.radius) + (circle2.y * circle1.radius)) / bothRadii,
+                            5
+                        );
+                        canvas.drawCircle(circle2, 'red', true);
+                        canvas.drawCircle(collisionPointCircle, 'cyan', true)
                     }
                     return true;
                 }
@@ -447,12 +462,12 @@ var bot = (function() {
 
                 if (window.snakes[snake].id != window.snake.id) {
                     if (window.visualDebugging) {
-                        var hCircle = {
-                            x: window.snakes[snake].xx,
-                            y: window.snakes[snake].yy,
-                            radius: window.getSnakeWidth(window.snakes[snake].sc) / 2
-                        };
-                        canvas.drawCircle(canvas.circleMapToCanvas(hCircle), 'red', false);
+                        var hCircle = canvas.circle(
+                            window.snakes[snake].xx,
+                            window.snakes[snake].yy,
+                            window.getSnakeWidth(window.snakes[snake].sc) / 2
+                        );
+                        canvas.drawCircle(hCircle, 'red', false);
                     }
 
                     for (var pts = 0, lp = window.snakes[snake].pts.length; pts < lp; pts++) {
@@ -479,18 +494,18 @@ var bot = (function() {
                 if (scPoint !== undefined) {
                     bot.collisionPoints.push(scPoint);
                     if (window.visualDebugging) {
-                        var cCircle = {
-                            x: scPoint.xx,
-                            y: scPoint.yy,
-                            radius: window.getSnakeWidth(scPoint.sc) / 2
-                        };
-                        canvas.drawCircle(canvas.circleMapToCanvas(cCircle), 'red', false);
+                        var cCircle = canvas.circle(
+                            scPoint.xx,
+                            scPoint.yy,
+                            window.getSnakeWidth(scPoint.sc) / 2
+                        );
+                        canvas.drawCircle(cCircle, 'red', false);
                     }
                 }
             }
             bot.collisionPoints.sort(bot.sortDistance);
         },
-
+        
         // Checks to see if you are going to collide with anything in the collision detection radius
         checkCollision: function (r) {
             if (!window.collisionDetection) return false;
@@ -508,55 +523,52 @@ var bot = (function() {
 
             if (window.snake.sp > 7) ra = r * 2;
 
-            var headCircle = {
-                x: xx,
-                y: yy,
-                radius: ra / 2 * window.getSnakeWidth() / 2
-            };
-
-            var forwardCircle = {
-                x: xx + window.snake.cos * ra / 2 * window.getSnakeWidth() / 2,
-                y: yy + window.snake.sin * ra / 2 * window.getSnakeWidth() / 2,
-                radius: ra / 2 * window.getSnakeWidth() / 2
-            };
-
-            var forwardBigCircle = {
-                x: xx + window.snake.cos * r * 1.9 * window.getSnakeWidth(1) / 2,
-                y: yy + window.snake.sin * r * 1.9 * window.getSnakeWidth(1) / 2,
-                radius: r * 2.4 * window.getSnakeWidth(1) / 2
-            };
-
-            var fullHeadCircle = {
-                x: xx + window.snake.cos * r / 2 * window.getSnakeWidth() / 2,
-                y: yy + window.snake.sin * r / 2 * window.getSnakeWidth() / 2,
-                radius: r * window.getSnakeWidth() / 2
-            };
+            var headCircle = canvas.circle(xx, yy, ra / 2 * window.getSnakeWidth() / 2);
             
-            var sidecircle_r = {
-                x: window.snake.lnp.xx -
+            var forwardCircle = canvas.circle(
+                xx + window.snake.cos * ra / 2 * window.getSnakeWidth() / 2,
+                yy + window.snake.sin * ra / 2 * window.getSnakeWidth() / 2,
+                ra / 2 * window.getSnakeWidth() / 2
+            );
+            
+            var forwardBigCircle = canvas.circle(
+                xx + window.snake.cos * r * 1.9 * window.getSnakeWidth(1) / 2,
+                yy + window.snake.sin * r * 1.9 * window.getSnakeWidth(1) / 2,
+                r * 2.4 * window.getSnakeWidth(1) / 2
+            );
+       
+            var fullHeadCircle = canvas.circle(
+                xx + window.snake.cos * r / 2 * window.getSnakeWidth() / 2,
+                yy + window.snake.sin * r / 2 * window.getSnakeWidth() / 2,
+                r * window.getSnakeWidth() / 2
+            );
+            
+            var sidecircle_r = canvas.circle(
+                window.snake.lnp.xx -
                 ((window.snake.lnp.yy + window.snake.sin * window.getSnakeWidth()) - window.snake.lnp.yy),
-                y: window.snake.lnp.yy +
+                window.snake.lnp.yy +
                 ((window.snake.lnp.xx + window.snake.cos * window.getSnakeWidth()) - window.snake.lnp.xx),
-                radius: window.getSnakeWidth() * window.snake.sp / window.snake.tsp
-            };
-            var sidecircle_l = {
-                x: window.snake.lnp.xx +
+                window.getSnakeWidth() * window.snake.sp / window.snake.tsp
+            );
+            
+            var sidecircle_l = canvas.circle(
+                window.snake.lnp.xx +
                 ((window.snake.lnp.yy + window.snake.sin * window.getSnakeWidth()) - window.snake.lnp.yy),
-                y: window.snake.lnp.yy -
+                 window.snake.lnp.yy -
                 ((window.snake.lnp.xx + window.snake.cos * window.getSnakeWidth()) - window.snake.lnp.xx),
-                radius: window.getSnakeWidth() * window.snake.sp / window.snake.tsp
-            };
+                window.getSnakeWidth() * window.snake.sp / window.snake.tsp
+            );
             
             window.snake.sidecircle_r = sidecircle_r;
             window.snake.sidecircle_l = sidecircle_l;
 
             if (window.visualDebugging) {
-                canvas.drawCircle(canvas.circleMapToCanvas(fullHeadCircle), 'red');
-                canvas.drawCircle(canvas.circleMapToCanvas(headCircle), 'blue', false);
-                canvas.drawCircle(canvas.circleMapToCanvas(forwardCircle), 'blue', false);
-                canvas.drawCircle(canvas.circleMapToCanvas(forwardBigCircle), 'yellow', false);
-                canvas.drawCircle(canvas.circleMapToCanvas(sidecircle_r), 'orange', true, 0.3);
-                canvas.drawCircle(canvas.circleMapToCanvas(sidecircle_l), 'orange', true, 0.3);
+                canvas.drawCircle(fullHeadCircle, 'red');
+                canvas.drawCircle(headCircle, 'blue', false);
+                canvas.drawCircle(forwardCircle, 'blue', false);
+                canvas.drawCircle(forwardBigCircle, 'yellow', false);
+                canvas.drawCircle(sidecircle_r, 'orange', true, 0.3);
+                canvas.drawCircle(sidecircle_l, 'orange', true, 0.3);
             }
 
 
@@ -564,17 +576,17 @@ var bot = (function() {
             if (bot.collisionPoints.length === 0) return false;
 
             for (var i = 0; i < bot.collisionPoints.length; i++) {
-                var collisionCircle = {
-                    x: bot.collisionPoints[i].xx,
-                    y: bot.collisionPoints[i].yy,
-                    radius: window.getSnakeWidth(bot.collisionPoints[i].sc) / 2
-                };
+                var collisionCircle = canvas.circle(
+                    bot.collisionPoints[i].xx,
+                    bot.collisionPoints[i].yy,
+                    window.getSnakeWidth(bot.collisionPoints[i].sc) / 2
+                );
 
-                var eHeadCircle = {
-                    x: bot.collisionPoints[i].headxx,
-                    y: bot.collisionPoints[i].headyy,
-                    radius: window.getSnakeWidth(bot.collisionPoints[i].sc) / 2
-                };
+                var eHeadCircle = canvas.circle(
+                    bot.collisionPoints[i].headxx,
+                    bot.collisionPoints[i].headyy,
+                    window.getSnakeWidth(bot.collisionPoints[i].sc) / 2
+                );
 
                 if (canvas.circleIntersect(headCircle, collisionCircle) || canvas.circleIntersect(forwardCircle, collisionCircle)) {
                     if (bot.collisionPoints[i].sp > 10 && (canvas.circleIntersect(headCircle, eHeadCircle) || canvas.circleIntersect(forwardCircle, eHeadCircle))) {
@@ -606,7 +618,7 @@ var bot = (function() {
             if (inBigCircle > 2) {
                 bot.avoidCollisionPoint({ xx: xx + window.snake.cos * 50, yy: yy + window.snake.sin * 50 });
                 if (window.visualDebugging) {
-                    canvas.drawCircle(canvas.circleMapToCanvas(forwardBigCircle), 'yellow', true, 0.3);
+                    canvas.drawCircle(forwardBigCircle, 'yellow', true, 0.3);
                 }
                 return true;
             }
@@ -622,7 +634,7 @@ var bot = (function() {
                 }) + 1 > 40) {
                     bot.avoidCollisionPoint({ xx: xx + window.snake.cos * 50, yy: yy + window.snake.sin * 50 });
                     if (window.visualDebugging) {
-                        canvas.drawCircle(canvas.circleMapToCanvas(forwardBigCircle), 'blue', true, 0.3);
+                        canvas.drawCircle(forwardBigCircle, 'blue', true, 0.3);
                     }
                     return true;
                 }
@@ -640,10 +652,10 @@ var bot = (function() {
             }).map(canvas.getDistance2FromSnake).filter(function(val) {
                 return !(
                     canvas.circleIntersect(
-                    {x: val.xx, y: val.yy, radius: 2},
+                    canvas.circle(val.xx, val.yy, 2),
                     window.snake.sidecircle_l) &&
                     canvas.circleIntersect(
-                    {x: val.xx, y: val.yy, radius: 2},
+                    canvas.circle(val.xx, val.yy, 2),
                     window.snake.sidecircle_r))
             }).sort(bot.sortDistance);
         },
@@ -942,7 +954,7 @@ var userInterface = (function() {
                         canvas.mapToCanvas(headCoord),
                         canvas.mapToCanvas(window.goalCoordinates),
                         'green');
-                    canvas.drawCircle(canvas.mapToCanvas(window.goalCoordinates), 'red', true);
+                    canvas.drawCircle(window.goalCoordinates, 'red', true);
                 }
             }
         },
