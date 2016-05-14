@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.1.10
+// @version      1.1.9
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -243,21 +243,31 @@ var canvas = (function() {
         },
 
         // Check if circles intersect
-        circleIntersect: function (circle1, circle2) {
-            var distance = canvas.getDistance2(circle1.x, circle1.y, circle2.x, circle2.y);
-            if (distance < Math.pow(circle1.radius + circle2.radius, 2)) {
-                if (window.visualDebugging) {
-                    var collisionPointCircle = {
-                        x: ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / bothRadii,
-                        y: ((circle1.y * circle2.radius) + (circle2.y * circle1.radius)) / bothRadii,
-                        radius: 5
-                    };
-                    canvas.drawCircle(canvas.circleMapToCanvas(circle2), 'red', true);
-                    canvas.drawCircle(canvas.circleMapToCanvas(collisionPointCircle), 'cyan', true)
-                }
-                return true;
-            }
+        circleIntersect: function(circle1, circle2) {
+            var bothRadii = circle1.radius + circle2.radius;
 
+            // Pretends the circles are squares for a quick collision check.
+            // If it collides, do the more expensive circle check.
+            if (circle1.x + bothRadii > circle2.x &&
+                circle1.y + bothRadii > circle2.y &&
+                circle1.x < circle2.x + bothRadii &&
+                circle1.y < circle2.y + bothRadii) {
+
+                var distance = canvas.getDistance(circle1.x,circle1.y,circle2.x,circle2.y);
+
+                if (distance < bothRadii) {
+                    if (window.visualDebugging) {
+                        var collisionPointCircle = {
+                            x: ((circle1.x * circle2.radius) + (circle2.x * circle1.radius)) / bothRadii,
+                            y: ((circle1.y * circle2.radius) + (circle2.y * circle1.radius)) / bothRadii,
+                            radius: 5
+                        };
+                        canvas.drawCircle(canvas.circleMapToCanvas(circle2), 'red', true);
+                        canvas.drawCircle(canvas.circleMapToCanvas(collisionPointCircle), 'cyan', true)
+                    }
+                    return true;
+                }
+            }
             return false;
         }
     };
