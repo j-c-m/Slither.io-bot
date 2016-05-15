@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.3
+// @version      1.3.4
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -398,18 +398,6 @@ var bot = (function() {
             window.dead_mtm = 0;
             window.login_fr = 0;
             bot.forceConnect();
-        },
-
-        changeSkin: function() {
-            if (window.playing && window.snake !== null) {
-                var skin = window.snake.rcv;
-                var max = window.max_skin_cv || 30;
-                skin++;
-                if (skin > max) {
-                    skin = 0;
-                }
-                window.setSkin(window.snake, skin);
-            }
         },
 
         // Avoid collison point 180 degree
@@ -899,10 +887,6 @@ var userInterface = (function() {
                 if (e.keyCode === 27) {
                     bot.quickRespawn();
                 }
-                // Letter 'X' to change skin
-                if (e.keyCode === 88) {
-                    bot.changeSkin();
-                }
                 // Save nickname when you press "Enter"
                 if (e.keyCode === 13) {
                     userInterface.saveNick();
@@ -1076,16 +1060,13 @@ window.loop = function() {
     userInterface.appendDiv(
         'quickResp_overlay', 'nsi', window.generalstyle + 'left: 30; top: 200px;');
     userInterface.appendDiv(
-        'changeskin_overlay', 'nsi', window.generalstyle + 'left: 30; top: 215px;');
-    userInterface.appendDiv(
-        'quittomenu_overlay', 'nsi', window.generalstyle + 'left: 30; top: 230px;');
+        'quittomenu_overlay', 'nsi', window.generalstyle + 'left: 30; top: 215px;');
 
     // Set static display options here.
     var generalStyle = '<span style = "opacity: 0.35";>';
     window.resetzoom_overlay.innerHTML = generalStyle + '(Z) Reset zoom </span>';
     window.scroll_overlay.innerHTML = generalStyle + '(Mouse Wheel) Zoom in/out </span>';
     window.quittomenu_overlay.innerHTML = generalStyle + '(Q) Quit to menu </span>';
-    window.changeskin_overlay.innerHTML = generalStyle + '(X) Change skin </span>';
     window.quickResp_overlay.innerHTML = generalStyle + '(ESC) Quick Respawn </span>';
     window.version_overlay.innerHTML = generalStyle + 'Version: ' + GM_info.script.version;
 
