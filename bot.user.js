@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.2.2
+// @version      1.2.4
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -29,8 +29,8 @@ window.log = function() {
 window.getSnakeLength = function() {
     return (Math.floor(
         150 *
-        (window.fpsls[window.snake.sct] + window.snake.fam / window.fmlts[window.snake.sct] - 1)
-        - 50) / 10);
+        (window.fpsls[window.snake.sct] + window.snake.fam / window.fmlts[window.snake.sct] - 1) -
+        50) / 10);
 };
 window.getSnakeWidth = function(sc) {
     if (sc === undefined) sc = window.snake.sc;
@@ -489,18 +489,20 @@ var bot = (function() {
             window.snake.cos = Math.cos(window.snake.ang).toFixed(3);
             window.snake.sin = Math.sin(window.snake.ang).toFixed(3);
 
-            var ra = r;
             var inBigCircle = 0;
             var bigCirclePts = [];
+            const speedMult = window.snake.sp / 5.78;
+            const widthMult = Math.min(window.getSnakeWidth(), window.getSnakeWidth(2));
 
-            if (window.snake.sp > 7) ra = r * 2;
-
-            var headCircle = canvas.circle(xx, yy, ra / 2 * window.getSnakeWidth() / 2);
+            var headCircle = canvas.circle(
+                xx, yy,
+                speedMult * r / 2 * window.getSnakeWidth() / 2
+            );
 
             var forwardCircle = canvas.circle(
-                xx + window.snake.cos * ra / 2 * window.getSnakeWidth() / 2,
-                yy + window.snake.sin * ra / 2 * window.getSnakeWidth() / 2,
-                ra / 2 * window.getSnakeWidth() / 2
+                xx + window.snake.cos * speedMult * r / 2 * widthMult / 2,
+                yy + window.snake.sin * speedMult * r / 2 * widthMult / 2,
+                speedMult * r / 2 * widthMult / 2
             );
 
             var forwardBigCircle = canvas.circle(
@@ -510,9 +512,9 @@ var bot = (function() {
             );
 
             var fullHeadCircle = canvas.circle(
-                xx + window.snake.cos * r / 2 * window.getSnakeWidth() / 2,
-                yy + window.snake.sin * r / 2 * window.getSnakeWidth() / 2,
-                r * window.getSnakeWidth() / 2
+                xx + window.snake.cos * r / 2 * widthMult / 2,
+                yy + window.snake.sin * r / 2 * widthMult / 2,
+                r * widthMult / 2
             );
 
             var sidecircle_r = canvas.circle(
@@ -522,7 +524,7 @@ var bot = (function() {
                 window.snake.lnp.yy +
                     ((window.snake.lnp.xx + window.snake.cos * window.getSnakeWidth()) -
                     window.snake.lnp.xx),
-                window.getSnakeWidth() * window.snake.sp / window.snake.tsp
+                window.getSnakeWidth() * speedMult
             );
 
             var sidecircle_l = canvas.circle(
@@ -532,7 +534,7 @@ var bot = (function() {
                  window.snake.lnp.yy -
                     ((window.snake.lnp.xx + window.snake.cos * window.getSnakeWidth()) -
                     window.snake.lnp.xx),
-                window.getSnakeWidth() * window.snake.sp / window.snake.tsp
+                window.getSnakeWidth() * speedMult
             );
 
             window.snake.sidecircle_r = sidecircle_r;
