@@ -16,10 +16,10 @@ The MIT License (MIT)
 // @supportURL   https://github.com/j-c-m/Slither.io-bot/issues
 // @grant        none
 // ==/UserScript==
-// Custom logging function - disabled by default
 
 window.scores = [];
 
+// Custom logging function - disabled by default
 window.log = function() {
     if (window.logDebugging) {
         console.log.apply(console, arguments);
