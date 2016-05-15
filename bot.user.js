@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.6
+// @version      1.3.7
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -727,21 +727,21 @@ var bot = (function() {
                 return;
             }
 
+            bot.lookForFood = false;
+
             if (!bot.ranOnce) {
                 bot.ranOnce = true;
             }
 
-            if (bot.lookForFood) {
-                bot.computeFoodGoal();
-            }
+            bot.computeFoodGoal();
 
-            if (bot.lookForFood) {
-                coordinatesOfClosestFood = {
-                    x: window.currentFoodX, y: window.currentFoodY
-                };
-                window.goalCoordinates = coordinatesOfClosestFood;
-                canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
-            }
+            coordinatesOfClosestFood = {
+                x: window.currentFoodX, y: window.currentFoodY
+            };
+            window.goalCoordinates = coordinatesOfClosestFood;
+            canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+
+            bot.lookForFood = true;
         }
     };
 })();
