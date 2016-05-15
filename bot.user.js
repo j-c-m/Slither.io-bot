@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.2.5
+// @version      1.2.6
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -733,7 +733,7 @@ var bot = (function() {
                     canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
                 }
             } else {
-                bot.tickCounter = -userInterface.framesPerSecond.getFPS();
+                bot.tickCounter = -userInterface.framesPerSecond.fps;
             }
         }
     };
@@ -797,17 +797,13 @@ var userInterface = (function() {
 
         // Store FPS data
         framesPerSecond: {
-            startTime: 0,
-            frameNumber: 0,
-            filterStrength: 40,
-            lastLoop: 0,
-            frameTime: 0,
-            getFPS: function() {
-                var thisLoop = performance.now();
-                var thisFrameTime = thisLoop - this.lastLoop;
-                this.frameTime += (thisFrameTime - this.frameTime) / this.filterStrength;
-                this.lastLoop = thisLoop;
-                return (1000 / this.frameTime).toFixed(0);
+            fps: 0,
+            fpsTimer: function() {
+                if (window.playing && window.fps && window.lrd_mtm) {
+                    if (Date.now() - window.lrd_mtm > 970) {
+                        userInterface.framesPerSecond.fps = window.fps;
+                    }
+                }
             }
         },
 
@@ -955,7 +951,7 @@ var userInterface = (function() {
             // Botstatus overlay
             var generalStyle = '<span style = "opacity: 0.35";>';
             window.fps_overlay.innerHTML = generalStyle + 'FPS: ' +
-                userInterface.framesPerSecond.getFPS() + '</span>';
+                userInterface.framesPerSecond.fps + '</span>';
 
             if (window.position_overlay && window.playing) {
                 // Display the X and Y of the snake
@@ -1120,6 +1116,9 @@ window.loop = function() {
 
     // Maintain desired zoom
     setInterval(canvas.maintainZoom(), 2000);
+
+    // Maintain fps
+    setInterval(userInterface.framesPerSecond.fpsTimer, 80);
 
     // Start!
     bot.launchBot();
