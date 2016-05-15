@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.2
+// @version      1.3.3
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -410,14 +410,6 @@ var bot = (function() {
                 }
                 window.setSkin(window.snake, skin);
             }
-        },
-
-        rotateSkin: function() {
-            if (!window.rotateskin) {
-                return;
-            }
-            bot.changeSkin();
-            setTimeout(bot.rotateSkin, 500);
         },
 
         // Avoid collison point 180 degree
@@ -865,13 +857,6 @@ var userInterface = (function() {
                     console.log('Automatic Respawning set to: ' + window.autoRespawn);
                     userInterface.savePreference('autoRespawn', window.autoRespawn);
                 }
-                // Letter 'W' to auto rotate skin
-                if (e.keyCode === 87) {
-                    window.rotateskin = !window.rotateskin;
-                    console.log('Auto skin rotator set to: ' + window.rotateskin);
-                    userInterface.savePreference('rotateskin', window.rotateskin);
-                    bot.rotateSkin();
-                }
                 // Letter 'O' to change rendermode (visual)
                 if (e.keyCode === 79) {
                     canvas.toggleMobileRendering(!window.mobileRender);
@@ -962,8 +947,6 @@ var userInterface = (function() {
                 userInterface.handleTextColor(window.logDebugging);
             window.autorespawn_overlay.innerHTML = generalStyle + '(I) Auto respawning: </span>' +
                 userInterface.handleTextColor(window.autoRespawn);
-            window.rotateskin_overlay.innerHTML = generalStyle + '(W) Auto skin rotator: </span>' +
-                userInterface.handleTextColor(window.rotateskin);
             window.rendermode_overlay.innerHTML = generalStyle + '(O) Mobile rendering: </span>' +
                 userInterface.handleTextColor(window.mobileRender);
             window.collision_detection_overlay.innerHTML = generalStyle +
@@ -1061,7 +1044,6 @@ window.loop = function() {
     userInterface.loadPreference('mobileRender', false);
     userInterface.loadPreference('collisionDetection', true);
     userInterface.loadPreference('collisionRadiusMultiplier', 10);
-    userInterface.loadPreference('rotateskin', false);
     window.nick.value = userInterface.loadPreference('savedNick', 'Slither.io-bot');
 
     // Overlays
@@ -1083,22 +1065,20 @@ window.loop = function() {
     userInterface.appendDiv(
         'rendermode_overlay', 'nsi', window.generalstyle + 'left: 30; top: 125px;');
     userInterface.appendDiv(
-        'rotateskin_overlay', 'nsi', window.generalstyle + 'left: 30; top: 140px;');
-    userInterface.appendDiv(
-        'collision_detection_overlay', 'nsi', window.generalstyle + 'left: 30; top: 155px;');
+        'collision_detection_overlay', 'nsi', window.generalstyle + 'left: 30; top: 140px;');
     userInterface.appendDiv(
         'collision_radius_multiplier_overlay', 'nsi', window.generalstyle +
-        'left: 30; top: 170px;');
+        'left: 30; top: 155px;');
     userInterface.appendDiv(
-        'resetzoom_overlay', 'nsi', window.generalstyle + 'left: 30; top: 185px;');
+        'resetzoom_overlay', 'nsi', window.generalstyle + 'left: 30; top: 170px;');
     userInterface.appendDiv(
-        'scroll_overlay', 'nsi', window.generalstyle + 'left: 30; top: 200px;');
+        'scroll_overlay', 'nsi', window.generalstyle + 'left: 30; top: 185px;');
     userInterface.appendDiv(
-        'quickResp_overlay', 'nsi', window.generalstyle + 'left: 30; top: 215px;');
+        'quickResp_overlay', 'nsi', window.generalstyle + 'left: 30; top: 200px;');
     userInterface.appendDiv(
-        'changeskin_overlay', 'nsi', window.generalstyle + 'left: 30; top: 230px;');
+        'changeskin_overlay', 'nsi', window.generalstyle + 'left: 30; top: 215px;');
     userInterface.appendDiv(
-        'quittomenu_overlay', 'nsi', window.generalstyle + 'left: 30; top: 245px;');
+        'quittomenu_overlay', 'nsi', window.generalstyle + 'left: 30; top: 230px;');
 
     // Set static display options here.
     var generalStyle = '<span style = "opacity: 0.35";>';
