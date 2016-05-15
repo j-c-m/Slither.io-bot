@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.1
+// @version      1.3.2
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -507,7 +507,7 @@ var bot = (function() {
 
             var headCircle = canvas.circle(
                 xx, yy,
-                speedMult * r / 2 * window.getSnakeWidth() / 2
+                speedMult * r / 2 * widthMult / 2
             );
 
             var forwardCircle = canvas.circle(
