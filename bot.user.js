@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.2.4
+// @version      1.2.5
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -106,12 +106,21 @@ var canvas = (function() {
             // Scaling ratio
             if (window.gsc) {
                 window.gsc *= Math.pow(0.9, e.wheelDelta / -120 || e.detail / 2 || 0);
+                window.desired_gsc = window.gsc;
             }
         },
 
         // Restores zoom to the default value.
         resetZoom: function() {
             window.gsc = 0.9;
+            window.desired_gsc = 0.9;
+        },
+
+        // Maintains Zoom
+        maintainZoom: function() {
+            if (window.desired_gsc !== undefined) {
+                window.gsc = window.desired_gsc;
+            }
         },
 
         // Sets background to the given image URL.
@@ -1108,6 +1117,9 @@ window.loop = function() {
 
     // Remove social
     window.social.remove();
+
+    // Maintain desired zoom
+    setInterval(canvas.maintainZoom(), 2000);
 
     // Start!
     bot.launchBot();
