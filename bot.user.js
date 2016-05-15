@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.2.8
+// @version      1.3.0
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -1141,7 +1141,7 @@ window.loop = function() {
     window.social.remove();
 
     // Maintain desired zoom
-    setInterval(canvas.maintainZoom, 2000);
+    setInterval(canvas.maintainZoom, 200);
 
     // Maintain fps
     setInterval(userInterface.framesPerSecond.fpsTimer, 80);
