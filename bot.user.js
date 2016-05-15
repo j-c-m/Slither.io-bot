@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.2.1
+// @version      1.2.2
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -16,10 +16,10 @@ The MIT License (MIT)
 // @supportURL   https://github.com/j-c-m/Slither.io-bot/issues
 // @grant        none
 // ==/UserScript==
-// Custom logging function - disabled by default
 
 window.scores = [];
 
+// Custom logging function - disabled by default
 window.log = function() {
     if (window.logDebugging) {
         console.log.apply(console, arguments);
