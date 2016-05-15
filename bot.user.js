@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.4
+// @version      1.3.6
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -497,9 +497,9 @@ var bot = (function() {
             );
 
             var forwardBigCircle = canvas.circle(
-                xx + window.snake.cos * r * 1.9 * window.getSnakeWidth(1) / 2,
-                yy + window.snake.sin * r * 1.9 * window.getSnakeWidth(1) / 2,
-                r * 2.4 * window.getSnakeWidth(1) / 2
+                xx + window.snake.cos * r * 2 * window.getSnakeWidth(1) / 2,
+                yy + window.snake.sin * r * 2 * window.getSnakeWidth(1) / 2,
+                r * 2.5 * window.getSnakeWidth(1) / 2
             );
 
             var fullHeadCircle = canvas.circle(
@@ -603,7 +603,8 @@ var bot = (function() {
             if (bigCirclePts.length > 0) {
                 bigCirclePts = bigCirclePts.map(function(p) {
                     p.distance = canvas.getDistance2(
-                        forwardBigCircle.x, forwardBigCircle.y, p.x, p.y);
+                        forwardBigCircle.x, forwardBigCircle.y,
+                        Math.round(p.xx), Math.round(p.yy));
                     return (p);
                 }).sort(bot.sortDistance);
 
