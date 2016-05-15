@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.2.6
+// @version      1.2.8
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -314,6 +314,7 @@ var bot = (function() {
         tickCounter: 0,
         isBotRunning: false,
         isBotEnabled: true,
+        lookForFood: false,
         collisionPoints: [],
 
         hideTop: function() {
@@ -350,6 +351,7 @@ var bot = (function() {
             userInterface.onPrefChange();
             window.onmousemove = function() { };
             bot.hideTop();
+            setInterval(bot.foodTimer, 500);
         },
 
         // Stops the bot
@@ -558,7 +560,6 @@ var bot = (function() {
                 canvas.drawCircle(sidecircle_l, 'orange', true, 0.3);
             }
 
-
             bot.getCollisionPoints();
             if (bot.collisionPoints.length === 0) return false;
 
@@ -671,7 +672,6 @@ var bot = (function() {
             var clusterAbsScore = 0;
             var clusterSumX = 0;
             var clusterSumY = 0;
-            var bestClusterIndx = 0;
 
             // there is no need to view more points (for performance)
             var nIter = Math.min(sortedFood.length, 300);
@@ -700,7 +700,6 @@ var bot = (function() {
                     bestClusterAbsScore = clusterAbsScore;
                     bestClusterX = clusterSumX / clusterAbsScore;
                     bestClusterY = clusterSumY / clusterAbsScore;
-                    bestClusterIndx = i;
                 }
             }
 
@@ -715,25 +714,52 @@ var bot = (function() {
             }
         },
 
-        // Called by the window loop, this is the main logic of the bot.
-        thinkAboutGoals: function() {
-            // If no enemies or obstacles, go after what you are going after
-            if (!bot.checkCollision(window.collisionRadiusMultiplier)) {
-                window.setAcceleration(0);
-                // Save CPU by only calculating every Nth frame
-                if (++bot.tickCounter >= 15) {
-                    bot.tickCounter = 0;
-                    // Current food
-                    bot.computeFoodGoal();
+        // Timer version of collision check
+        collisionTimer: function() {
+            if (!window.playing || !bot.isBotRunning) {
+                return;
+            }
 
-                    var coordinatesOfClosestFood = {
-                        x: window.currentFoodX, y: window.currentFoodY };
-
-                    window.goalCoordinates = coordinatesOfClosestFood;
-                    canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
-                }
+            if (bot.checkCollision(window.collisionRadiusMultiplier)) {
+                bot.lookForFood = false;
             } else {
-                bot.tickCounter = -userInterface.framesPerSecond.fps;
+                bot.lookForFood = true;
+                window.setAcceleration(0);
+            }
+        },
+
+        // Loop version of collision check
+        collisionLoop: function() {
+            if (bot.checkCollision(window.collisionRadiusMultiplier)) {
+                bot.lookForFood = false;
+            } else {
+                bot.lookForFood = true;
+                window.setAcceleration(0);
+            }
+        },
+
+        // Timer version of food check
+        foodTimer: function() {
+            var coordinatesOfClosestFood = {};
+
+            if (!window.playing || !bot.isBotRunning || !bot.lookForFood) {
+                return;
+            }
+
+            if (!bot.ranOnce) {
+                bot.ranOnce = true;
+            }
+
+            if (bot.lookForFood) {
+                bot.computeFoodGoal();
+            }
+
+            if (bot.lookForFood) {
+                coordinatesOfClosestFood = {
+                    x: window.currentFoodX, y: window.currentFoodY
+                };
+                window.goalCoordinates = coordinatesOfClosestFood;
+                canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
             }
         }
     };
@@ -810,7 +836,7 @@ var userInterface = (function() {
         onkeydown: function(e) {
             // Original slither.io onkeydown function + whatever is under it
             original_keydown(e);
-            if (document.activeElement.parentElement !== window.nick_holder) {
+            if (window.playing) {
                 // Letter `T` to toggle bot
                 if (e.keyCode === 84) {
                     if (bot.isBotRunning) {
@@ -1020,7 +1046,7 @@ window.loop = function() {
     // If the game and the bot are running
     if (window.playing && bot.isBotEnabled) {
         bot.ranOnce = true;
-        bot.thinkAboutGoals();
+        bot.collisionLoop();
     } else if (bot.ranOnce) {
         bot.stopBot();
     }
@@ -1115,7 +1141,7 @@ window.loop = function() {
     window.social.remove();
 
     // Maintain desired zoom
-    setInterval(canvas.maintainZoom(), 2000);
+    setInterval(canvas.maintainZoom, 2000);
 
     // Maintain fps
     setInterval(userInterface.framesPerSecond.fpsTimer, 80);
