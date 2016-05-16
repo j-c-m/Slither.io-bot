@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.9
+// @version      1.4.0
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -316,7 +316,7 @@ var bot = (function() {
         isBotEnabled: true,
         lookForFood: false,
         collisionPoints: [],
-        foodInterval: undefined,
+        foodTimeout: undefined,
 
         hideTop: function() {
             var nsidivs = document.querySelectorAll('div.nsi');
@@ -352,8 +352,8 @@ var bot = (function() {
             userInterface.onPrefChange();
             window.onmousemove = function() { };
             bot.hideTop();
-            if (bot.foodInterval === undefined) {
-                bot.foodInterval = setInterval(bot.foodTimer, 500);
+            if (bot.foodTimeout === undefined) {
+                bot.foodTimeout = setTimeout(bot.foodTimer, 500);
             }
         },
 
@@ -698,8 +698,15 @@ var bot = (function() {
 
             if (bot.checkCollision(window.collisionRadiusMultiplier)) {
                 bot.lookForFood = false;
+                if (bot.foodTimeout) {
+                    window.clearTimeout(bot.foodTimeout);
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000);
+                }
             } else {
                 bot.lookForFood = true;
+                if (bot.foodTimeout === undefined) {
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 300);
+                }
                 window.setAcceleration(0);
             }
         },
@@ -708,8 +715,15 @@ var bot = (function() {
         collisionLoop: function() {
             if (bot.checkCollision(window.collisionRadiusMultiplier)) {
                 bot.lookForFood = false;
+                if (bot.foodTimeout) {
+                    window.clearTimeout(bot.foodTimeout);
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000);
+                }
             } else {
                 bot.lookForFood = true;
+                if (bot.foodTimeout === undefined) {
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 300);
+                }
                 window.setAcceleration(0);
             }
         },
@@ -719,24 +733,25 @@ var bot = (function() {
             var coordinatesOfClosestFood = {};
 
             if (!window.playing || !bot.isBotRunning || !bot.lookForFood) {
-                return;
+                bot.foodTimeout = undefined;
             }
-
-            bot.lookForFood = false;
 
             if (!bot.ranOnce) {
                 bot.ranOnce = true;
             }
 
-            bot.computeFoodGoal();
+            if (bot.lookForFood) {
+                bot.computeFoodGoal();
+            }
 
-            coordinatesOfClosestFood = {
-                x: window.currentFoodX, y: window.currentFoodY
-            };
-            window.goalCoordinates = coordinatesOfClosestFood;
-            canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
-
-            bot.lookForFood = true;
+            if (bot.lookForFood) {
+                coordinatesOfClosestFood = {
+                    x: window.currentFoodX, y: window.currentFoodY
+                };
+                window.goalCoordinates = coordinatesOfClosestFood;
+                canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+            }
+            bot.foodTimeout = undefined;
         }
     };
 })();
