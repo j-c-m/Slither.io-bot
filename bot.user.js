@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.7
+// @version      1.3.8
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -316,6 +316,7 @@ var bot = (function() {
         isBotEnabled: true,
         lookForFood: false,
         collisionPoints: [],
+        foodInterval: undefined,
 
         hideTop: function() {
             var nsidivs = document.querySelectorAll('div.nsi');
@@ -351,7 +352,9 @@ var bot = (function() {
             userInterface.onPrefChange();
             window.onmousemove = function() { };
             bot.hideTop();
-            setInterval(bot.foodTimer, 500);
+            if (bot.foodInterval === undefined) {
+                bot.foodInterval = setInterval(bot.foodTimer, 500);
+            }
         },
 
         // Stops the bot
