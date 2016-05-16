@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.4.1
+// @version      1.4.2
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -729,19 +729,9 @@ var bot = (function() {
         foodTimer: function() {
             var coordinatesOfClosestFood = {};
 
-            if (!window.playing || !bot.isBotRunning || !bot.lookForFood) {
-                bot.foodTimeout = undefined;
-            }
-
-            if (!bot.ranOnce) {
-                bot.ranOnce = true;
-            }
-
-            if (bot.lookForFood) {
+            if (window.playing && bot.isBotRunning && bot.lookForFood &&
+                window.snake !== null && window.snake.alive_amt === 1) {
                 bot.computeFoodGoal();
-            }
-
-            if (bot.lookForFood) {
                 coordinatesOfClosestFood = {
                     x: window.currentFoodX, y: window.currentFoodY
                 };
@@ -977,6 +967,7 @@ var userInterface = (function() {
         oef: function() {
             // Original slither.io oef function + whatever is under it
             // requestAnimationFrame(window.loop);
+            canvas.maintainZoom();
             original_oef();
             if (bot.isBotRunning) window.loop();
             userInterface.onFrameUpdate();
@@ -1108,9 +1099,6 @@ window.loop = function() {
 
     // Remove social
     window.social.remove();
-
-    // Maintain desired zoom
-    setInterval(canvas.maintainZoom, 50);
 
     // Maintain fps
     setInterval(userInterface.framesPerSecond.fpsTimer, 80);
