@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.4.2
+// @version      1.4.3
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -400,12 +400,47 @@ var bot = (function() {
             bot.forceConnect();
         },
 
-        // Avoid collison point 180 degree
-        avoidCollisionPoint: function(collisionPoint) {
-            window.goalCoordinates = {
-                x: window.snake.xx + (window.snake.xx - collisionPoint.xx),
-                y: window.snake.yy + (window.snake.yy - collisionPoint.yy)
+        // Avoid collison point by ang
+        // ang radians <= Math.PI (180deg)
+        avoidCollisionPoint: function(collisionPoint, ang) {
+            if (ang === undefined || ang > Math.PI) {
+                ang = Math.PI;
+            }
+
+            var end = {
+                x: window.snake.xx + 2000 * window.snake.cos,
+                y: window.snake.yy + 2000 * window.snake.sin
             };
+
+            if (window.visualDebugging) {
+                canvas.drawLine(
+                    canvas.mapToCanvas({x: window.snake.xx, y: window.snake.yy}),
+                    canvas.mapToCanvas(end),
+                    'orange', 5);
+                canvas.drawLine(
+                    canvas.mapToCanvas({x: window.snake.xx, y: window.snake.yy}),
+                    canvas.mapToCanvas({x: collisionPoint.xx, y: collisionPoint.yy}),
+                    'red', 5);
+            }
+
+            var cos = Math.cos(ang);
+            var sin = Math.sin(ang);
+
+            if (canvas.isLeft(
+                { x: window.snake.xx, y: window.snake.yy }, end,
+                { x: collisionPoint.xx, y: collisionPoint.yy })) {
+                sin = -sin;
+            }
+
+            window.goalCoordinates = {
+                x: Math.round(
+                    cos * (collisionPoint.xx - window.snake.xx) -
+                    sin * (collisionPoint.yy - window.snake.yy) + window.snake.xx),
+                y: Math.round(
+                    sin * (collisionPoint.xx - window.snake.xx) +
+                    cos * (collisionPoint.yy - window.snake.yy) + window.snake.yy)
+            };
+
             canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
         },
 
@@ -584,8 +619,8 @@ var bot = (function() {
 
             if (inBigCircle > 2) {
                 bot.avoidCollisionPoint({
-                    xx: xx + window.snake.cos * 50,
-                    yy: yy + window.snake.sin * 50 });
+                    xx: bot.collisionPoints[0].xx,
+                    yy: bot.collisionPoints[0].yy }, Math.PI / 2);
                 if (window.visualDebugging) {
                     canvas.drawCircle(forwardBigCircle, 'yellow', true, 0.3);
                 }
@@ -604,8 +639,8 @@ var bot = (function() {
                     return p.distance > forwardBigCircle.radius * forwardBigCircle.radius;
                 }) + 1 > 40) {
                     bot.avoidCollisionPoint({
-                        xx: xx + window.snake.cos * 50,
-                        yy: yy + window.snake.sin * 50 });
+                        xx: bot.collisionPoints[0].xx,
+                        yy: bot.collisionPoints[0].yy }, Math.PI / 2);
                     if (window.visualDebugging) {
                         canvas.drawCircle(forwardBigCircle, 'blue', true, 0.3);
                     }
@@ -684,27 +719,6 @@ var bot = (function() {
                 window.foodAcceleration = 1;
             } else {
                 window.foodAcceleration = 0;
-            }
-        },
-
-        // Timer version of collision check
-        collisionTimer: function() {
-            if (!window.playing || !bot.isBotRunning) {
-                return;
-            }
-
-            if (bot.checkCollision(window.collisionRadiusMultiplier)) {
-                bot.lookForFood = false;
-                if (bot.foodTimeout) {
-                    window.clearTimeout(bot.foodTimeout);
-                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000);
-                }
-            } else {
-                bot.lookForFood = true;
-                if (bot.foodTimeout === undefined) {
-                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 300);
-                }
-                window.setAcceleration(0);
             }
         },
 
