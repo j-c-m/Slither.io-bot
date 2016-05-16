@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.3.8
+// @version      1.3.9
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -561,15 +561,7 @@ var bot = (function() {
 
                 if (canvas.circleIntersect(headCircle, collisionCircle) ||
                     canvas.circleIntersect(forwardCircle, collisionCircle)) {
-                    if (bot.collisionPoints[i].sp > 10 && (
-                        canvas.circleIntersect(headCircle, eHeadCircle) ||
-                        canvas.circleIntersect(forwardCircle, eHeadCircle))
-                        ) {
-                        window.setAcceleration(1);
-                    } else {
-                        window.setAcceleration(0);
-                    }
-
+                    window.setAcceleration(0);
                     bot.avoidCollisionPoint(bot.collisionPoints[i]);
                     return true;
                 }
@@ -637,7 +629,7 @@ var bot = (function() {
                 return !(
                     canvas.circleIntersect(
                     canvas.circle(val.xx, val.yy, 2),
-                    window.snake.sidecircle_l) &&
+                    window.snake.sidecircle_l) ||
                     canvas.circleIntersect(
                     canvas.circle(val.xx, val.yy, 2),
                     window.snake.sidecircle_r));
