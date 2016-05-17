@@ -162,7 +162,7 @@ var canvas = (function() {
         },
 
         // Draw a rectnagle on the canvas.
-        drawRect: function(rect, colour, fill, alpha) {
+        drawRect: function(rect, color, fill, alpha) {
             if (alpha === undefined) alpha = 1;
 
             var context = window.mc.getContext('2d');
@@ -170,18 +170,18 @@ var canvas = (function() {
 
             context.save();
             context.globalAlpha = alpha;
-            context.strokeStyle = colour;
+            context.strokeStyle = color;
             context.rect(lc.x, lc.y, rect.width * window.gsc, rect.height * window.gsc);
             context.stroke();
             if (fill) {
-                context.fillStyle = colour;
+                context.fillStyle = color;
                 context.fill();
             }
             context.restore();
         },
 
         // Draw a circle on the canvas.
-        drawCircle: function(circle, colour, fill, alpha) {
+        drawCircle: function(circle, color, fill, alpha) {
             if (alpha === undefined) alpha = 1;
             if (circle.radius === undefined) circle.radius = 5;
 
@@ -191,11 +191,11 @@ var canvas = (function() {
             context.save();
             context.globalAlpha = alpha;
             context.beginPath();
-            context.strokeStyle = colour;
+            context.strokeStyle = color;
             context.arc(drawCircle.x, drawCircle.y, drawCircle.radius, 0, Math.PI * 2);
             context.stroke();
             if (fill) {
-                context.fillStyle = colour;
+                context.fillStyle = color;
                 context.fill();
             }
             context.restore();
@@ -205,23 +205,28 @@ var canvas = (function() {
         // @param {number} start -- where to start the angle
         // @param {number} angle -- width of the angle
         // @param {bool} danger -- green if false, red if true
-        drawAngle: function(start, angle, danger) {
+        drawAngle: function(start, angle, color, fill, alpha) {
+            if (alpha === undefined) alpha = 0.6;
+
             var context = window.mc.getContext('2d');
+
             context.save();
-            context.globalAlpha = 0.6;
+            context.globalAlpha = alpha;
             context.beginPath();
             context.moveTo(window.mc.width / 2, window.mc.height / 2);
             context.arc(window.mc.width / 2, window.mc.height / 2, window.gsc * 100, start, angle);
             context.lineTo(window.mc.width / 2, window.mc.height / 2);
             context.closePath();
-            context.fillStyle = (danger) ? 'red' : 'green';
-            context.fill();
             context.stroke();
+            if (fill) {
+                context.fillStyle = color;
+                context.fill();
+            }
             context.restore();
         },
 
         // Draw a line on the canvas.
-        drawLine: function(p1, p2, colour, width) {
+        drawLine: function(p1, p2, color, width) {
             if (width === undefined) width = 5;
 
             var context = window.mc.getContext('2d');
@@ -231,7 +236,7 @@ var canvas = (function() {
             context.save();
             context.beginPath();
             context.lineWidth = width * window.gsc;
-            context.strokeStyle = colour;
+            context.strokeStyle = color;
             context.moveTo(dp1.x, dp1.y);
             context.lineTo(dp2.x, dp2.y);
             context.stroke();
