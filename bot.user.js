@@ -93,6 +93,18 @@ var canvas = (function() {
             );
         },
 
+        // Constructor for rect type
+        rect: function(x, y, w, h) {
+            var r = {
+                x: Math.round(x),
+                y: Math.round(y),
+                width: Math.round(w),
+                height: Math.round(h)
+            };
+
+            return r;
+        },
+
         // Constructor for circle type
         circle: function(x, y, r) {
             var c = {
@@ -147,6 +159,25 @@ var canvas = (function() {
                 canvas.setBackground();
                 window.render_mode = 2;
             }
+        },
+
+        // Draw a rectnagle on the canvas.
+        drawRect: function(rect, colour, fill, alpha) {
+            if (alpha === undefined) alpha = 1;
+
+            var context = window.mc.getContext('2d');
+            var lc = canvas.mapToCanvas({x: rect.x, y: rect.y});
+
+            context.save();
+            context.globalAlpha = alpha;
+            context.strokeStyle = colour;
+            context.rect(lc.x, lc.y, rect.width * window.gsc, rect.height * window.gsc);
+            context.stroke();
+            if (fill) {
+                context.fillStyle = colour;
+                context.fill();
+            }
+            context.restore();
         },
 
         // Draw a circle on the canvas.
