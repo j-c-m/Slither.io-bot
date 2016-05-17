@@ -419,7 +419,8 @@ var bot = (function() {
             for (var snake = 0, ls = window.snakes.length; snake < ls; snake++) {
                 scPoint = undefined;
 
-                if (window.snakes[snake].id !== window.snake.id) {
+                if (window.snakes[snake].id !== window.snake.id &&
+                    window.snakes[snake].alive_amt === 1) {
                     if (window.visualDebugging) {
                         var hCircle = canvas.circle(
                             window.snakes[snake].xx,
@@ -430,7 +431,12 @@ var bot = (function() {
                     }
 
                     for (var pts = 0, lp = window.snakes[snake].pts.length; pts < lp; pts++) {
-                        if (!window.snakes[snake].pts[pts].dying) {
+                        if (!window.snakes[snake].pts[pts].dying &&
+                            window.snake.xx + 500 > window.snakes[snake].pts[pts].xx &&
+                            window.snake.xx - 500 < window.snakes[snake].pts[pts].xx &&
+                            window.snake.yy + 500 > window.snakes[snake].pts[pts].yy &&
+                            window.snake.yy - 500 < window.snakes[snake].pts[pts].yy
+                            ) {
                             var collisionPoint = {
                                 headxx: window.snakes[snake].xx,
                                 headyy: window.snakes[snake].yy,
@@ -500,8 +506,8 @@ var bot = (function() {
             );
 
             var fullHeadCircle = canvas.circle(
-                xx + window.snake.cos * r / 2 * widthMult / 2,
-                yy + window.snake.sin * r / 2 * widthMult / 2,
+                xx + window.snake.cos * r / 2 * widthMult / 3,
+                yy + window.snake.sin * r / 2 * widthMult / 3,
                 r * widthMult / 2
             );
 
@@ -589,7 +595,7 @@ var bot = (function() {
                     }
                     bot.avoidCollisionPoint({
                         xx: bot.collisionPoints[i].headxx,
-                        yy: bot.collisionPoints[i].headyy });
+                        yy: bot.collisionPoints[i].headyy }, 3 * Math.PI / 4);
                     return true;
                 }
 
@@ -711,12 +717,12 @@ var bot = (function() {
                 bot.lookForFood = false;
                 if (bot.foodTimeout) {
                     window.clearTimeout(bot.foodTimeout);
-                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1500);
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 2000);
                 }
             } else {
                 bot.lookForFood = true;
                 if (bot.foodTimeout === undefined) {
-                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 300);
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 200);
                 }
                 window.setAcceleration(0);
             }
