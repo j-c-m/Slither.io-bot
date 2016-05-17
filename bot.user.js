@@ -165,7 +165,7 @@ var canvas = (function() {
             }
         },
 
-        // Draw a rectnagle on the canvas.
+        // Draw a rectangle on the canvas.
         drawRect: function(rect, color, fill, alpha) {
             if (alpha === undefined) alpha = 1;
 
@@ -1122,12 +1122,9 @@ var userInterface = (function() {
 
     // Set render mode
     if (window.mobileRender) {
-        canvas.setBackground(
-            'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs');
-        window.render_mode = 1;
+        canvas.toggleMobileRendering(true);
     } else {
-        canvas.setBackground();
-        window.render_mode = 2;
+        canvas.toggleMobileRenderin(false);
     }
 
     // Unblocks all skins without the need for FB sharing.
