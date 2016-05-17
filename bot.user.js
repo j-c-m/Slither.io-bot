@@ -145,26 +145,6 @@ var canvas = (function() {
             window.ii.src = url;
         },
 
-        // Manual mobile rendering
-        toggleMobileRendering: function(mobileRendering) {
-            window.mobileRender = mobileRendering;
-            window.log('Mobile rendering set to: ' + window.mobileRender);
-            userInterface.savePreference('mobileRender', window.mobileRender);
-            // Set render mode
-            if (window.mobileRender) {
-                canvas.setBackground(
-                    'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs');
-                window.render_mode = 1;
-                window.want_quality = 0;
-                window.high_quality = false;
-            } else {
-                canvas.setBackground();
-                window.render_mode = 2;
-                window.want_quality = 1;
-                window.high_quality = true;
-            }
-        },
-
         // Draw a rectangle on the canvas.
         drawRect: function(rect, color, fill, alpha) {
             if (alpha === undefined) alpha = 1;
@@ -323,17 +303,6 @@ var bot = (function() {
             }
         },
 
-        hideTop: function() {
-            var nsidivs = document.querySelectorAll('div.nsi');
-            for (var i = 0; i < nsidivs.length; i++) {
-                if (nsidivs[i].style.top === '4px' && nsidivs[i].style.width === '300px') {
-                    nsidivs[i].style.visibility = 'hidden';
-                    nsidivs[i].style.zIndex = -1;
-                    bot.isTopHidden = true;
-                }
-            }
-        },
-
         startBot: function() {
             if (window.autoRespawn && !window.playing && bot.isBotEnabled && bot.ranOnce &&
                 !bot.isBotRunning) {
@@ -355,9 +324,7 @@ var bot = (function() {
             bot.isBotRunning = true;
             // Removed the onmousemove listener so we can
             // move the snake manually by setting coordinates
-            userInterface.onPrefChange();
             window.onmousemove = function() { };
-            bot.hideTop();
         },
 
         // Stops the bot
@@ -795,6 +762,11 @@ var userInterface = (function() {
     var original_keydown = document.onkeydown;
     var original_onmouseDown = window.onmousedown;
     var original_oef = window.oef;
+    var original_redraw = window.redraw;
+    const TARGET_FPS = 30;
+
+    window.oef = function() {};
+    window.redraw = function() {};
 
     return {
         // Save variable to local storage
@@ -832,6 +804,18 @@ var userInterface = (function() {
         saveNick: function() {
             var nick = document.getElementById('nick').value;
             userInterface.savePreference('savedNick', nick);
+        },
+
+        // Hide top score
+        hideTop: function() {
+            var nsidivs = document.querySelectorAll('div.nsi');
+            for (var i = 0; i < nsidivs.length; i++) {
+                if (nsidivs[i].style.top === '4px' && nsidivs[i].style.width === '300px') {
+                    nsidivs[i].style.visibility = 'hidden';
+                    nsidivs[i].style.zIndex = -1;
+                    bot.isTopHidden = true;
+                }
+            }
         },
 
         // Add interface elements to the page.
@@ -892,7 +876,7 @@ var userInterface = (function() {
                 }
                 // Letter 'O' to change rendermode (visual)
                 if (e.keyCode === 79) {
-                    canvas.toggleMobileRendering(!window.mobileRender);
+                    userInterface.toggleMobileRendering(!window.mobileRender);
                 }
                 // Letter 'C' to toggle Collision detection / enemy avoidance
                 if (e.keyCode === 67) {
@@ -965,6 +949,26 @@ var userInterface = (function() {
             userInterface.onPrefChange();
         },
 
+        // Manual mobile rendering
+        toggleMobileRendering: function(mobileRendering) {
+            window.mobileRender = mobileRendering;
+            window.log('Mobile rendering set to: ' + window.mobileRender);
+            userInterface.savePreference('mobileRender', window.mobileRender);
+            // Set render mode
+            if (window.mobileRender) {
+                canvas.setBackground(
+                    'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs');
+                window.render_mode = 1;
+                window.want_quality = 0;
+                window.high_quality = false;
+            } else {
+                canvas.setBackground();
+                window.render_mode = 2;
+                window.want_quality = 1;
+                window.high_quality = true;
+            }
+        },
+
         onPrefChange: function() {
             var generalStyle = '<span style = "opacity: 0.35";>';
             window.botstatus_overlay.innerHTML = generalStyle + '(T / Right Click) Bot: </span>' +
@@ -1011,12 +1015,14 @@ var userInterface = (function() {
             }
         },
 
-        oef: function() {
-            // Original slither.io oef function + whatever is under it
+        oefTimer: function() {
+            var start = Date.now();
             canvas.maintainZoom();
             original_oef();
+            original_redraw();
             if (bot.isBotRunning) bot.loop();
             userInterface.onFrameUpdate();
+            setTimeout(userInterface.oefTimer, (1000 / TARGET_FPS) - (Date.now() - start));
         },
 
         // Quit to menu
@@ -1053,7 +1059,6 @@ var userInterface = (function() {
     window.play_btn.btnf.addEventListener('click', userInterface.playButtonClickListener);
     document.onkeydown = userInterface.onkeydown;
     window.onmousedown = userInterface.onmousedown;
-    window.oef = userInterface.oef;
     window.onresize = userInterface.onresize;
 
     // Load preferences
@@ -1122,9 +1127,9 @@ var userInterface = (function() {
 
     // Set render mode
     if (window.mobileRender) {
-        canvas.toggleMobileRendering(true);
+        userInterface.toggleMobileRendering(true);
     } else {
-        canvas.toggleMobileRenderin(false);
+        userInterface.toggleMobileRenderin(false);
     }
 
     // Unblocks all skins without the need for FB sharing.
@@ -1137,6 +1142,9 @@ var userInterface = (function() {
     setInterval(userInterface.framesPerSecond.fpsTimer, 80);
 
     // Start!
+    userInterface.onPrefChange();
+    userInterface.hideTop();
     bot.launchBot();
     window.startInterval = setInterval(bot.startBot, 1000);
+    userInterface.oefTimer();
 })();
