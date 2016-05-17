@@ -155,9 +155,13 @@ var canvas = (function() {
                 canvas.setBackground(
                     'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs');
                 window.render_mode = 1;
+                window.want_quality = 0;
+                window.high_quality = false;
             } else {
                 canvas.setBackground();
                 window.render_mode = 2;
+                window.want_quality = 1;
+                window.high_quality = true;
             }
         },
 
