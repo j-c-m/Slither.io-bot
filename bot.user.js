@@ -223,13 +223,17 @@ var canvas = (function() {
         // Draw a line on the canvas.
         drawLine: function(p1, p2, colour, width) {
             if (width === undefined) width = 5;
+
             var context = window.mc.getContext('2d');
+            var dp1 = canvas.mapToCanvas(p1);
+            var dp2 = canvas.mapToCanvas(p2);
+
             context.save();
             context.beginPath();
             context.lineWidth = width * window.gsc;
             context.strokeStyle = colour;
-            context.moveTo(p1.x, p1.y);
-            context.lineTo(p2.x, p2.y);
+            context.moveTo(dp1.x, dp1.y);
+            context.lineTo(dp2.x, dp2.y);
             context.stroke();
             context.restore();
         },
@@ -407,12 +411,12 @@ var bot = (function() {
 
             if (window.visualDebugging) {
                 canvas.drawLine(
-                    canvas.mapToCanvas({x: window.snake.xx, y: window.snake.yy}),
-                    canvas.mapToCanvas(end),
+                    {x: window.snake.xx, y: window.snake.yy},
+                    end,
                     'orange', 5);
                 canvas.drawLine(
-                    canvas.mapToCanvas({x: window.snake.xx, y: window.snake.yy}),
-                    canvas.mapToCanvas({x: collisionPoint.xx, y: collisionPoint.yy}),
+                    {x: window.snake.xx, y: window.snake.yy},
+                    {x: collisionPoint.xx, y: collisionPoint.yy},
                     'red', 5);
             }
 
@@ -990,8 +994,8 @@ var userInterface = (function() {
                 if (window.goalCoordinates) {
                     var headCoord = {x: window.snake.xx, y: window.snake.yy};
                     canvas.drawLine(
-                        canvas.mapToCanvas(headCoord),
-                        canvas.mapToCanvas(window.goalCoordinates),
+                        headCoord,
+                        window.goalCoordinates,
                         'green');
                     canvas.drawCircle(window.goalCoordinates, 'red', true);
                 }
