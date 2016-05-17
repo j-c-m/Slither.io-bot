@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.4.3
+// @version      1.4.4
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -348,7 +348,8 @@ var bot = (function() {
         launchBot: function() {
             window.log('Starting Bot.');
             bot.isBotRunning = true;
-            // Removed the onmousemove listener so we can move the snake manually by setting coordinates
+            // Removed the onmousemove listener so we can
+            // move the snake manually by setting coordinates
             userInterface.onPrefChange();
             window.onmousemove = function() { };
             bot.hideTop();
@@ -578,6 +579,21 @@ var bot = (function() {
             bot.getCollisionPoints();
             if (bot.collisionPoints.length === 0) return false;
 
+            // Check for any collision in forward circle first.
+            for (var f = 0; f < bot.collisionPoints.length; f++) {
+                if (canvas.circleIntersect(
+                    forwardCircle,
+                    canvas.circle(
+                        bot.collisionPoints[f].xx,
+                        bot.collisionPoints[f].yy,
+                        window.getSnakeWidth(bot.collisionPoints[f].sc) / 2
+                ))) {
+                    window.setAcceleration(0);
+                    bot.avoidCollisionPoint(bot.collisionPoints[f]);
+                    return true;
+                }
+            }
+
             for (var i = 0; i < bot.collisionPoints.length; i++) {
                 var collisionCircle = canvas.circle(
                     bot.collisionPoints[i].xx,
@@ -593,7 +609,13 @@ var bot = (function() {
 
                 if (canvas.circleIntersect(headCircle, collisionCircle) ||
                     canvas.circleIntersect(forwardCircle, collisionCircle)) {
-                    window.setAcceleration(0);
+                    if (canvas.circleIntersect(headCircle, eHeadCircle) &&
+                        !canvas.circleIntersect(forwardCircle, eHeadCircle) &&
+                        bot.collisionPoints[i].sp > 10) {
+                        window.setAcceleration(1);
+                    } else {
+                        window.setAcceleration(0);
+                    }
                     bot.avoidCollisionPoint(bot.collisionPoints[i]);
                     return true;
                 }
@@ -728,7 +750,7 @@ var bot = (function() {
                 bot.lookForFood = false;
                 if (bot.foodTimeout) {
                     window.clearTimeout(bot.foodTimeout);
-                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000);
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1500);
                 }
             } else {
                 bot.lookForFood = true;
