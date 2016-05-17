@@ -16,10 +16,10 @@ The MIT License (MIT)
 // @supportURL   https://github.com/j-c-m/Slither.io-bot/issues
 // @grant        none
 // ==/UserScript==
-// Custom logging function - disabled by default
 
 window.scores = [];
 
+// Custom logging function - disabled by default
 window.log = function() {
     if (window.logDebugging) {
         console.log.apply(console, arguments);
@@ -40,7 +40,10 @@ window.getSnakeWidth = function(sc) {
 var canvas = (function() {
     return {
         // Ratio of screen size divided by canvas size.
-        canvasRatio: [window.mc.width / window.ww, window.mc.height / window.hh],
+        canvasRatio: {
+            x: window.mc.width / window.ww,
+            y: window.mc.height / window.hh
+        },
 
         // Spoofs moving the mouse to the provided coordinates.
         setMouseCoordinates: function(point) {
@@ -58,9 +61,9 @@ var canvas = (function() {
         // Convert screen coordinates to canvas coordinates.
         screenToCanvas: function(point) {
             var canvasX = window.csc *
-                (point.x * canvas.canvasRatio[0]) - parseInt(window.mc.style.left);
+                (point.x * canvas.canvasRatio.x) - parseInt(window.mc.style.left);
             var canvasY = window.csc *
-                (point.y * canvas.canvasRatio[1]) - parseInt(window.mc.style.top);
+                (point.y * canvas.canvasRatio.y) - parseInt(window.mc.style.top);
             return { x: canvasX, y: canvasY };
         },
 
@@ -200,64 +203,11 @@ var canvas = (function() {
             context.restore();
         },
 
-        // Check if a point is between two vectors.
-        // The vectors have to be anticlockwise (sectorEnd on the left of sectorStart).
-        isBetweenVectors: function(point, sectorStart, sectorEnd) {
-            var center = [window.snake.xx, window.snake.yy];
-            if (point.xx) {
-                // Point coordinates relative to center
-                var relPoint = {
-                    x: point.xx - center[0],
-                    y: point.yy - center[1]
-                };
-                return (!canvas.areClockwise(sectorStart, relPoint) &&
-                    canvas.areClockwise(sectorEnd, relPoint));
-            }
-            return false;
-        },
-
-        // Angles are given in radians. The overall angle (endAngle-startAngle)
-        // cannot be above Math.PI radians (180°).
-        isInsideAngle: function(point, startAngle, endAngle) {
-            // calculate normalized vectors from angle
-            var startAngleVector = {
-                x: Math.cos(startAngle),
-                y: Math.sin(startAngle)
-            };
-            var endAngleVector = {
-                x: Math.cos(endAngle),
-                y: Math.sin(endAngle)
-            };
-            // Use isBetweenVectors to check if the point belongs to the angle
-            return canvas.isBetweenVectors(point, startAngleVector, endAngleVector);
-        },
-
-        // Given two vectors, return a truthy/falsy value depending on their
-        // position relative to each other.
-        areClockwise: function(vector1, vector2) {
-            // Calculate the dot product.
-            return -vector1.x * vector2.y + vector1.y * vector2.x > 0;
-        },
-
         // Given the start and end of a line, is point left.
         isLeft: function(start, end, point) {
             return ((end.x - start.x) * (point.y - start.y) -
              (end.y - start.y) * (point.x - start.x)) > 0;
 
-        },
-
-        // Given an object (of which properties xx and yy are not null),
-        // return the object with an additional property 'distance'.
-        getDistanceFromSnake: function(point) {
-            point.distance = canvas.getDistance(window.snake.xx, window.snake.yy,
-                point.xx, point.yy);
-            return point;
-        },
-
-        // Get a distance from point (x1; y1) to point (x2; y2).
-        getDistance: function(x1, y1, x2, y2) {
-            var distance = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-            return distance;
         },
 
         // Get distance squared
@@ -317,6 +267,17 @@ var bot = (function() {
         lookForFood: false,
         collisionPoints: [],
         foodTimeout: undefined,
+
+        // Loop for running the bot
+        loop: function() {
+            // If the game and the bot are running
+            if (window.playing && bot.isBotEnabled) {
+                bot.ranOnce = true;
+                bot.collisionLoop();
+            } else if (bot.ranOnce) {
+                bot.stopBot();
+            }
+        },
 
         hideTop: function() {
             var nsidivs = document.querySelectorAll('div.nsi');
@@ -1002,10 +963,9 @@ var userInterface = (function() {
 
         oef: function() {
             // Original slither.io oef function + whatever is under it
-            // requestAnimationFrame(window.loop);
             canvas.maintainZoom();
             original_oef();
-            if (bot.isBotRunning) window.loop();
+            if (bot.isBotRunning) bot.loop();
             userInterface.onFrameUpdate();
         },
 
@@ -1025,9 +985,10 @@ var userInterface = (function() {
         onresize: function() {
             window.resize();
             // Canvas different size from the screen (often bigger).
-            canvas.canvasRatio = [window.mc.width / window.ww,
-                window.mc.height / window.hh
-            ];
+            canvas.canvasRatio = {
+                x: window.mc.width / window.ww,
+                y: window.mc.height / window.hh
+            };
         },
 
         handleTextColor: function(enabled) {
@@ -1036,26 +997,15 @@ var userInterface = (function() {
         }
     };
 })();
-window.play_btn.btnf.addEventListener('click', userInterface.playButtonClickListener);
-document.onkeydown = userInterface.onkeydown;
-window.onmousedown = userInterface.onmousedown;
-window.oef = userInterface.oef;
-window.onresize = userInterface.onresize;
-
-
-// Loop for running the bot
-window.loop = function() {
-    // If the game and the bot are running
-    if (window.playing && bot.isBotEnabled) {
-        bot.ranOnce = true;
-        bot.collisionLoop();
-    } else if (bot.ranOnce) {
-        bot.stopBot();
-    }
-};
 
 // Main
 (function() {
+    window.play_btn.btnf.addEventListener('click', userInterface.playButtonClickListener);
+    document.onkeydown = userInterface.onkeydown;
+    window.onmousedown = userInterface.onmousedown;
+    window.oef = userInterface.oef;
+    window.onresize = userInterface.onresize;
+
     // Load preferences
     userInterface.loadPreference('logDebugging', false);
     userInterface.loadPreference('visualDebugging', false);
