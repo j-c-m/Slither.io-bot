@@ -424,8 +424,11 @@ var bot = (function() {
 
         // Get closest collision point per snake.
         getCollisionPoints: function() {
-            bot.collisionPoints = [];
             var scPoint;
+            const BOX_SIZE = 1600;
+
+            bot.collisionPoints = [];
+
 
             for (var snake = 0, ls = window.snakes.length; snake < ls; snake++) {
                 scPoint = undefined;
@@ -448,16 +451,24 @@ var bot = (function() {
 
                     for (var pts = 0, lp = window.snakes[snake].pts.length; pts < lp; pts++) {
                         if (!window.snakes[snake].pts[pts].dying &&
-                            window.snake.xx + 500 > window.snakes[snake].pts[pts].xx &&
-                            window.snake.xx - 500 < window.snakes[snake].pts[pts].xx &&
-                            window.snake.yy + 500 > window.snakes[snake].pts[pts].yy &&
-                            window.snake.yy - 500 < window.snakes[snake].pts[pts].yy
+                            window.snake.xx + (BOX_SIZE / 2) > window.snakes[snake].pts[pts].xx &&
+                            window.snake.xx - (BOX_SIZE / 2) < window.snakes[snake].pts[pts].xx &&
+                            window.snake.yy + (BOX_SIZE / 2) > window.snakes[snake].pts[pts].yy &&
+                            window.snake.yy - (BOX_SIZE / 2) < window.snakes[snake].pts[pts].yy
                             ) {
                             var collisionPoint = {
                                 xx: window.snakes[snake].pts[pts].xx,
                                 yy: window.snakes[snake].pts[pts].yy,
                                 snake: snake
                             };
+
+                            if (window.visualDebugging) {
+                                canvas.drawCircle(canvas.circle(
+                                    collisionPoint.xx,
+                                    collisionPoint.yy,
+                                    window.getSnakeWidth(window.snakes[snake].sc) / 2),
+                                    '#00FF00', false);
+                            }
 
                             canvas.getDistance2FromSnake(collisionPoint);
 
