@@ -510,12 +510,6 @@ var bot = (function() {
                 speedMult * r / 2 * widthMult / 2
             );
 
-            var forwardBigCircle = canvas.circle(
-                xx + window.snake.cos * r * 2 * window.getSnakeWidth(1) / 2,
-                yy + window.snake.sin * r * 2 * window.getSnakeWidth(1) / 2,
-                r * 2.5 * window.getSnakeWidth(1) / 2
-            );
-
             var fullHeadCircle = canvas.circle(
                 xx + window.snake.cos * r / 2 * widthMult / 3,
                 yy + window.snake.sin * r / 2 * widthMult / 3,
@@ -549,7 +543,6 @@ var bot = (function() {
                 canvas.drawCircle(fullHeadCircle, 'red');
                 canvas.drawCircle(headCircle, 'blue', false);
                 canvas.drawCircle(forwardCircle, 'blue', false);
-                canvas.drawCircle(forwardBigCircle, 'yellow', false);
                 canvas.drawCircle(sidecircle_r, 'orange', true, 0.3);
                 canvas.drawCircle(sidecircle_l, 'orange', true, 0.3);
             }
@@ -609,45 +602,7 @@ var bot = (function() {
                         yy: bot.collisionPoints[i].headyy }, 3 * Math.PI / 4);
                     return true;
                 }
-
-                if (canvas.circleIntersect(forwardBigCircle, collisionCircle)) {
-                    inBigCircle++;
-                    bigCirclePts = bigCirclePts.concat(
-                        window.snakes[bot.collisionPoints[i].snake].pts);
-                }
             }
-
-            if (inBigCircle > 2) {
-                bot.avoidCollisionPoint({
-                    xx: bot.collisionPoints[0].xx,
-                    yy: bot.collisionPoints[0].yy }, Math.PI / 2);
-                if (window.visualDebugging) {
-                    canvas.drawCircle(forwardBigCircle, 'yellow', true, 0.3);
-                }
-                return true;
-            }
-
-            if (bigCirclePts.length > 0) {
-                bigCirclePts = bigCirclePts.map(function(p) {
-                    p.distance = canvas.getDistance2(
-                        forwardBigCircle.x, forwardBigCircle.y,
-                        Math.round(p.xx), Math.round(p.yy));
-                    return (p);
-                }).sort(bot.sortDistance);
-
-                if (bigCirclePts.findIndex(function(p) {
-                    return p.distance > forwardBigCircle.radius * forwardBigCircle.radius;
-                }) + 1 > 40) {
-                    bot.avoidCollisionPoint({
-                        xx: bot.collisionPoints[0].xx,
-                        yy: bot.collisionPoints[0].yy }, Math.PI / 2);
-                    if (window.visualDebugging) {
-                        canvas.drawCircle(forwardBigCircle, 'blue', true, 0.3);
-                    }
-                    return true;
-                }
-            }
-
             window.setAcceleration(0);
             return false;
         },
