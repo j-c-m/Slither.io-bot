@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io-bot
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.4.5
+// @version      1.5.1
 // @description  Slither.io bot
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -1063,7 +1063,7 @@ var userInterface = (function() {
     if (window.mobileRender) {
         userInterface.toggleMobileRendering(true);
     } else {
-        userInterface.toggleMobileRenderin(false);
+        userInterface.toggleMobileRendering(false);
     }
 
     // Unblocks all skins without the need for FB sharing.
