@@ -472,7 +472,7 @@ var bot = window.bot = (function() {
         // Add to collisionAngles if distance is closer
         addCollisionAngle: function(sp) {
             // 2.546 ~ 1 / (Math.PI / 8)
-            var pang = Math.round(Math.atan2(
+            var pang = Math.round(canvas.fastAtan2(
                 Math.round(sp.yy - window.snake.yy),
                 Math.round(sp.xx - window.snake.xx)) * 2.546) / 2.546;
 
@@ -703,7 +703,7 @@ var bot = window.bot = (function() {
 
                     if (foodGetIndex[cx + '|' + cy] === undefined) {
                         foodGetIndex[cx + '|' + cy] = fi;
-                        a = Math.atan2(cy - window.snake.yy, cx - window.snake.xx);
+                        a = canvas.fastAtan2(cy - window.snake.yy, cx - window.snake.xx);
                         da = Math.min(
                             (2 * Math.PI) - Math.abs(a - sang), Math.abs(a - sang));
                         distance = Math.round(
