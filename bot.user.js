@@ -985,7 +985,7 @@ var userInterface = window.userInterface = (function() {
             window.fps_overlay.innerHTML = generalStyle + 'FPS: ' +
                 userInterface.framesPerSecond.fps + '</span>';
 
-            if (window.position_overlay && window.playing) {
+            if (window.position_overlay && window.playing && window.snake !== null) {
                 // Display the X and Y of the snake
                 window.position_overlay.innerHTML = generalStyle + 'X: ' +
                     (Math.round(window.snake.xx) || 0) + ' Y: ' +
