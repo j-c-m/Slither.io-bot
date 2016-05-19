@@ -5,10 +5,10 @@ The MIT License (MIT)
  https://jmiller.mit-license.org/
 */
 // ==UserScript==
-// @name         Slither.io-bot
+// @name         Slither.io-bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
 // @version      1.5.1
-// @description  Slither.io bot
+// @description  Slither.io-bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
 // @updateURL    https://github.com/j-c-m/Slither.io-bot/raw/master/bot.user.js
@@ -127,6 +127,28 @@ var canvas = window.canvas = (function() {
             };
 
             return c;
+        },
+
+        // Fast atan2
+        fastAtan2: function(y, x) {
+            const QPI = Math.PI / 4;
+            const TQPI = 3 * Math.PI / 4;
+            var r = 0.0;
+            var angle = 0.0;
+            var abs_y = Math.abs(y) + 1e-10;
+            if (x < 0) {
+                r = (x + abs_y) / (abs_y - x);
+                angle = TQPI;
+            } else {
+                r = (x - abs_y) / (x + abs_y);
+                angle = QPI;
+            }
+            angle += (0.1963 * r * r - 0.9817) * r;
+            if (y < 0) {
+                return -angle;
+            }
+
+            return angle;
         },
 
         // Adjusts zoom in response to the mouse wheel.
@@ -570,9 +592,8 @@ var bot = window.bot = (function() {
             );
 
             var fullHeadCircle = canvas.circle(
-                xx + window.snake.cos * r / 2 * widthMult / 3,
-                yy + window.snake.sin * r / 2 * widthMult / 3,
-                r * widthMult / 3
+                xx, yy,
+                r * widthMult * 2 / 5
             );
 
             var sidecircle_r = canvas.circle(
@@ -724,7 +745,7 @@ var bot = window.bot = (function() {
                 bot.lookForFood = false;
                 if (bot.foodTimeout) {
                     window.clearTimeout(bot.foodTimeout);
-                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000);
+                    bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000 / TARGET_FPS * 4);
                 }
             } else {
                 bot.lookForFood = true;
@@ -1132,6 +1153,7 @@ var userInterface = window.userInterface = (function() {
     setInterval(userInterface.framesPerSecond.fpsTimer, 80);
 
     // Start!
+    Math.atan2 = canvas.fastAtan2;
     userInterface.onPrefChange();
     userInterface.hideTop();
     bot.launchBot();
