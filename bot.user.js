@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.7.2
+// @version      1.7.3
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -669,7 +669,7 @@ var bot = window.bot = (function() {
                     }
                     bot.avoidCollisionPoint({
                         xx: window.snakes[bot.collisionPoints[i].snake].xx,
-                        yy: window.snakes[bot.collisionPoints[i].snake].yy }, 3 * Math.PI / 4);
+                        yy: window.snakes[bot.collisionPoints[i].snake].yy });
                     return true;
                 }
             }
