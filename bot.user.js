@@ -20,8 +20,6 @@ The MIT License (MIT)
 
 const TARGET_FPS = 30;
 
-window.scores = [];
-
 // Custom logging function - disabled by default
 window.log = function() {
     if (window.logDebugging) {
@@ -335,6 +333,7 @@ var bot = window.bot = (function() {
         lookForFood: false,
         collisionPoints: [],
         collisionAngles: {},
+        scores: [],
         foodTimeout: undefined,
         sectorBoxSide: 0,
         sectorBox: {},
@@ -355,14 +354,11 @@ var bot = window.bot = (function() {
             if (window.autoRespawn && !window.playing && bot.isBotEnabled && bot.ranOnce &&
                 !bot.isBotRunning) {
                 bot.connectBot();
-                if (document.querySelector('div#lastscore').childNodes.length > 1) {
-                    window.scores.push(parseInt(document.querySelector(
-                        'div#lastscore').childNodes[1].innerHTML));
+                if (window.lastscore && window.lastscore.childNodes[1]) {
+                    bot.scores.push(parseInt(window.lastscore.childNodes[1].innerHTML));
+                    bot.scores.sort(function(a, b) { return b - a; });
+                    userInterface.updateStats();
                 }
-            }
-            if (window.bso !== undefined) {
-                userInterface.overlays.serverOverlay.innerHTML =
-                    window.bso.ip + ':' + window.bso.po;
             }
         },
 
@@ -815,7 +811,7 @@ var userInterface = window.userInterface = (function() {
 
             var prefOverlay = document.createElement('div');
             prefOverlay.style.position = 'fixed';
-            prefOverlay.style.left = '5px';
+            prefOverlay.style.left = '10px';
             prefOverlay.style.top = '75px';
             prefOverlay.style.width = '260px';
             prefOverlay.style.height = '210px';
@@ -828,10 +824,25 @@ var userInterface = window.userInterface = (function() {
             prefOverlay.style.borderRadius = '5px';
             document.body.appendChild(prefOverlay);
 
+            var statsOverlay = document.createElement('div');
+            statsOverlay.style.position = 'fixed';
+            statsOverlay.style.left = '10px';
+            statsOverlay.style.bottom = '200px';
+            statsOverlay.style.width = '140px';
+            statsOverlay.style.height = '210px';
+            statsOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            statsOverlay.style.color = '#C0C0C0';
+            statsOverlay.style.fontFamily = 'Consolas, Verdana';
+            statsOverlay.style.zIndex = 998;
+            statsOverlay.style.fontSize = '14px';
+            statsOverlay.style.padding = '5px';
+            statsOverlay.style.borderRadius = '5px';
+            document.body.appendChild(statsOverlay);
+
             userInterface.overlays.botOverlay = botOverlay;
             userInterface.overlays.serverOverlay = serverOverlay;
             userInterface.overlays.prefOverlay = prefOverlay;
-
+            userInterface.overlays.statsOverlay = statsOverlay;
         },
 
         // Save variable to local storage
@@ -881,18 +892,6 @@ var userInterface = window.userInterface = (function() {
                     bot.isTopHidden = true;
                 }
             }
-        },
-
-        // Add interface elements to the page.
-        // @param {string} id
-        // @param {string} className
-        // @param style
-        appendDiv: function(id, className, style) {
-            var div = document.createElement('div');
-            if (id) div.id = id;
-            if (className) div.className = className;
-            if (style) div.style = style;
-            document.body.appendChild(div);
         },
 
         // Store FPS data
@@ -1034,6 +1033,23 @@ var userInterface = window.userInterface = (function() {
             }
         },
 
+        // Update stats overlay.
+        updateStats: function() {
+            var oContent = [];
+
+            if (bot.scores.length === 0) return;
+
+            oContent.push('games played: ' + bot.scores.length);
+            oContent.push('avg score: ' + Math.round(
+                bot.scores.reduce(function(a, b) { return a + b; }) / (bot.scores.length)));
+
+            for (var i = 0; i < bot.scores.length && i < 10; i++) {
+                oContent.push(i + 1 + '. ' + bot.scores[i]);
+            }
+
+            userInterface.overlays.statsOverlay.innerHTML = oContent.join('<br/>');
+        },
+
         onPrefChange: function() {
             // Set static display options here.
             var oContent = [];
@@ -1053,13 +1069,16 @@ var userInterface = window.userInterface = (function() {
             oContent.push('[Q] quit to menu');
 
             userInterface.overlays.prefOverlay.innerHTML = oContent.join('<br/>');
+
+            if (window.bso !== undefined) {
+                userInterface.overlays.serverOverlay.innerHTML =
+                    window.bso.ip + ':' + window.bso.po;
+            }
         },
 
         onFrameUpdate: function() {
             // Botstatus overlay
             var oContent = [];
-
-
 
             if (window.playing && window.snake !== null) {
                 oContent.push('fps: ' + userInterface.framesPerSecond.fps);
