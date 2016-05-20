@@ -489,13 +489,14 @@ var bot = window.bot = (function() {
                 bot.collisionAngles[aIndex] = {
                     x: Math.round(sp.xx),
                     y: Math.round(sp.yy),
-                    pang: ang,
+                    ang: ang,
                     snake: sp.snake,
                     distance: actualDistance
                 };
             } else if (bot.collisionAngles[aIndex].distance > sp.distance) {
-                bot.collisionAngles[aIndex].x = sp.xx;
-                bot.collisionAngles[aIndex].y = sp.yy;
+                bot.collisionAngles[aIndex].x = Math.round(sp.xx);
+                bot.collisionAngles[aIndex].y = Math.round(sp.yy);
+                bot.collisionAngles[aIndex].ang = ang;
                 bot.collisionAngles[aIndex].snake = sp.snake;
                 bot.collisionAngles[aIndex].distance = actualDistance;
             }
