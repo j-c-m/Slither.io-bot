@@ -729,6 +729,26 @@ var bot = window.bot = (function() {
             bot.currentFood = {x: 20000, y: 20000};
         },
 
+        foodAccel: function() {
+            var pang = 0.0;
+
+            if (bot.currentFood && bot.currentFood.sz > 60) {
+                pang = Math.round(bot.currentFood.a * 2.546) / 2.546;
+
+                if (
+                    bot.collisionAngles[pang] && bot.collisionAngles[pang].distance >
+                    bot.currentFood.distance * 2) {
+                    return 1;
+                }
+
+                if (bot.collisionAngles[pang] === undefined) {
+                    return 1;
+                }
+            }
+
+            return 0;
+        },
+
         // Loop version of collision check
         collisionLoop: function() {
             bot.sectorBoxSide = Math.floor(Math.sqrt(window.sectors.length)) * window.sector_size;
@@ -736,7 +756,7 @@ var bot = window.bot = (function() {
                 window.snake.xx - (bot.sectorBoxSide / 2),
                 window.snake.yy - (bot.sectorBoxSide / 2),
                 bot.sectorBoxSide, bot.sectorBoxSide);
-            if (window.visualDebugging) canvas.drawRect(bot.sectorBox, '#c0c0c0', true, 0.1);
+            // if (window.visualDebugging) canvas.drawRect(bot.sectorBox, '#c0c0c0', true, 0.1);
 
             if (bot.checkCollision(window.collisionRadiusMultiplier)) {
                 bot.lookForFood = false;
@@ -749,7 +769,7 @@ var bot = window.bot = (function() {
                 if (bot.foodTimeout === undefined) {
                     bot.foodTimeout = window.setTimeout(bot.foodTimer, 1000 / TARGET_FPS * 4);
                 }
-                window.setAcceleration(0);
+                window.setAcceleration(bot.foodAccel());
             }
         },
 
@@ -788,7 +808,7 @@ var userInterface = window.userInterface = (function() {
             botOverlay.style.bottom = '112px';
             botOverlay.style.width = '150px';
             botOverlay.style.height = '85px';
-            botOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            // botOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
             botOverlay.style.color = '#C0C0C0';
             botOverlay.style.fontFamily = 'Consolas, Verdana';
             botOverlay.style.zIndex = 999;
@@ -815,7 +835,7 @@ var userInterface = window.userInterface = (function() {
             prefOverlay.style.top = '75px';
             prefOverlay.style.width = '260px';
             prefOverlay.style.height = '210px';
-            prefOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            // prefOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
             prefOverlay.style.color = '#C0C0C0';
             prefOverlay.style.fontFamily = 'Consolas, Verdana';
             prefOverlay.style.zIndex = 999;
@@ -830,7 +850,7 @@ var userInterface = window.userInterface = (function() {
             statsOverlay.style.bottom = '200px';
             statsOverlay.style.width = '140px';
             statsOverlay.style.height = '210px';
-            statsOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            // statsOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
             statsOverlay.style.color = '#C0C0C0';
             statsOverlay.style.fontFamily = 'Consolas, Verdana';
             statsOverlay.style.zIndex = 998;
