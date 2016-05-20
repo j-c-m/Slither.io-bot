@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.7.1
+// @version      1.7.2
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -332,7 +332,7 @@ var bot = window.bot = (function() {
         isBotEnabled: true,
         lookForFood: false,
         collisionPoints: [],
-        collisionAngles: {},
+        collisionAngles: [],
         scores: [],
         foodTimeout: undefined,
         sectorBoxSide: 0,
@@ -464,26 +464,40 @@ var bot = window.bot = (function() {
             return a.distance - b.distance;
         },
 
+        // get collision angle index, expects angle +/i 0 to Math.PI
+        getAngleIndex: function(angle) {
+            const ARCSIZE = Math.PI / 4;
+
+            if (angle < 0) {
+                angle += 2 * Math.PI;
+            }
+
+            return Math.round(angle * (1 / ARCSIZE));
+        },
+
         // Add to collisionAngles if distance is closer
         addCollisionAngle: function(sp) {
-            // 2.546 ~ 1 / (Math.PI / 8)
-            var pang = Math.round(canvas.fastAtan2(
+            var ang = canvas.fastAtan2(
                 Math.round(sp.yy - window.snake.yy),
-                Math.round(sp.xx - window.snake.xx)) * 2.546) / 2.546;
+                Math.round(sp.xx - window.snake.xx));
+            var aIndex = bot.getAngleIndex(ang);
 
-            if (bot.collisionAngles[pang] === undefined) {
-                bot.collisionAngles[pang] = {
+            var actualDistance = Math.round(
+                sp.distance - (Math.pow(window.getSnakeWidth(window.snakes[sp.snake].sc), 2) / 2));
+
+            if (bot.collisionAngles[aIndex] === undefined) {
+                bot.collisionAngles[aIndex] = {
                     x: Math.round(sp.xx),
                     y: Math.round(sp.yy),
-                    pang: pang,
+                    pang: ang,
                     snake: sp.snake,
-                    distance: Math.round(sp.distance)
+                    distance: actualDistance
                 };
-            } else if (bot.collisionAngles[pang].distance > sp.distance) {
-                bot.collisionAngles[pang].x = sp.xx;
-                bot.collisionAngles[pang].y = sp.yy;
-                bot.collisionAngles[pang].snake = sp.snake;
-                bot.collisionAngles[pang].distance = Math.round(sp.distance);
+            } else if (bot.collisionAngles[aIndex].distance > sp.distance) {
+                bot.collisionAngles[aIndex].x = sp.xx;
+                bot.collisionAngles[aIndex].y = sp.yy;
+                bot.collisionAngles[aIndex].snake = sp.snake;
+                bot.collisionAngles[aIndex].distance = actualDistance;
             }
         },
 
@@ -492,7 +506,7 @@ var bot = window.bot = (function() {
             var scPoint;
 
             bot.collisionPoints = [];
-            bot.collisionAngles = {};
+            bot.collisionAngles = [];
 
 
             for (var snake = 0, ls = window.snakes.length; snake < ls; snake++) {
@@ -558,12 +572,15 @@ var bot = window.bot = (function() {
             }
             bot.collisionPoints.sort(bot.sortDistance);
             if (window.visualDebugging) {
-                Object.keys(bot.collisionAngles).forEach(function(key) {
-                    canvas.drawLine(
+                for (var i = 0; i < bot.collisionAngles.length; i++) {
+                    if (bot.collisionAngles[i] !== undefined)
+                    {
+                        canvas.drawLine(
                         {x: window.snake.xx, y: window.snake.yy},
-                        {x: bot.collisionAngles[key].x, y: bot.collisionAngles[key].y},
+                        {x: bot.collisionAngles[i].x, y: bot.collisionAngles[i].y},
                         '#99ffcc', 2);
-                });
+                    }
+                }
             }
         },
 
@@ -716,11 +733,9 @@ var bot = window.bot = (function() {
             foodClusters.sort(bot.sortScore);
 
             for (i = 0; i < foodClusters.length; i++) {
-                var pang = Math.round(foodClusters[i].a * 2.546) / 2.546;
-                if (bot.collisionAngles[pang] === undefined ||
-                    bot.collisionAngles[pang].distance - Math.pow(window.getSnakeWidth(), 2) -
-                    Math.pow(window.getSnakeWidth(
-                        window.snakes[bot.collisionAngles[pang].snake].sc), 2) >
+                var aIndex = bot.getAngleIndex(foodClusters[i].a);
+                if (bot.collisionAngles[aIndex] === undefined ||
+                    bot.collisionAngles[aIndex].distance - Math.pow(window.getSnakeWidth(), 2) >
                     foodClusters[i].distance) {
                     bot.currentFood = foodClusters[i];
                     return;
@@ -730,18 +745,18 @@ var bot = window.bot = (function() {
         },
 
         foodAccel: function() {
-            var pang = 0.0;
+            var aIndex = 0;
 
             if (bot.currentFood && bot.currentFood.sz > 60) {
-                pang = Math.round(bot.currentFood.a * 2.546) / 2.546;
+                aIndex = bot.getAngleIndex(bot.currentFood.a);
 
                 if (
-                    bot.collisionAngles[pang] && bot.collisionAngles[pang].distance >
+                    bot.collisionAngles[aIndex] && bot.collisionAngles[aIndex].distance >
                     bot.currentFood.distance * 2) {
                     return 1;
                 }
 
-                if (bot.collisionAngles[pang] === undefined) {
+                if (bot.collisionAngles[aIndex] === undefined) {
                     return 1;
                 }
             }
