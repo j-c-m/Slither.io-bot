@@ -20,8 +20,6 @@ The MIT License (MIT)
 
 const TARGET_FPS = 30;
 
-window.scores = [];
-
 // Custom logging function - disabled by default
 window.log = function() {
     if (window.logDebugging) {
@@ -335,6 +333,7 @@ var bot = window.bot = (function() {
         lookForFood: false,
         collisionPoints: [],
         collisionAngles: {},
+        scores: [],
         foodTimeout: undefined,
         sectorBoxSide: 0,
         sectorBox: {},
@@ -355,15 +354,11 @@ var bot = window.bot = (function() {
             if (window.autoRespawn && !window.playing && bot.isBotEnabled && bot.ranOnce &&
                 !bot.isBotRunning) {
                 bot.connectBot();
-                if (document.querySelector('div#lastscore').childNodes.length > 1) {
-                    window.scores.push(parseInt(document.querySelector(
-                        'div#lastscore').childNodes[1].innerHTML));
+                if (window.lastscore && window.lastscore.childNodes[1]) {
+                    bot.scores.push(parseInt(window.lastscore.childNodes[1].innerHTML));
+                    bot.scores.sort(function(a, b) { return b - a; });
+                    userInterface.updateStats();
                 }
-            }
-            if (window.bso !== undefined) {
-                var generalStyle = '<span style = "opacity: 0.35";>';
-                window.ip_overlay.innerHTML = generalStyle + 'Server: ' +
-                    window.bso.ip + ':' + window.bso.po;
             }
         },
 
@@ -781,7 +776,75 @@ var userInterface = window.userInterface = (function() {
     window.oef = function() {};
     window.redraw = function() {};
 
+
+
     return {
+        overlays: {},
+
+        initOverlays: function() {
+            var botOverlay = document.createElement('div');
+            botOverlay.style.position = 'fixed';
+            botOverlay.style.right = '5px';
+            botOverlay.style.bottom = '112px';
+            botOverlay.style.width = '150px';
+            botOverlay.style.height = '85px';
+            botOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            botOverlay.style.color = '#C0C0C0';
+            botOverlay.style.fontFamily = 'Consolas, Verdana';
+            botOverlay.style.zIndex = 999;
+            botOverlay.style.fontSize = '14px';
+            botOverlay.style.padding = '5px';
+            botOverlay.style.borderRadius = '5px';
+            document.body.appendChild(botOverlay);
+
+            var serverOverlay = document.createElement('div');
+            serverOverlay.style.position = 'fixed';
+            serverOverlay.style.right = '5px';
+            serverOverlay.style.bottom = '5px';
+            serverOverlay.style.width = '160px';
+            serverOverlay.style.height = '14px';
+            serverOverlay.style.color = '#C0C0C0';
+            serverOverlay.style.fontFamily = 'Consolas, Verdana';
+            serverOverlay.style.zIndex = 999;
+            serverOverlay.style.fontSize = '14px';
+            document.body.appendChild(serverOverlay);
+
+            var prefOverlay = document.createElement('div');
+            prefOverlay.style.position = 'fixed';
+            prefOverlay.style.left = '10px';
+            prefOverlay.style.top = '75px';
+            prefOverlay.style.width = '260px';
+            prefOverlay.style.height = '210px';
+            prefOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            prefOverlay.style.color = '#C0C0C0';
+            prefOverlay.style.fontFamily = 'Consolas, Verdana';
+            prefOverlay.style.zIndex = 999;
+            prefOverlay.style.fontSize = '14px';
+            prefOverlay.style.padding = '5px';
+            prefOverlay.style.borderRadius = '5px';
+            document.body.appendChild(prefOverlay);
+
+            var statsOverlay = document.createElement('div');
+            statsOverlay.style.position = 'fixed';
+            statsOverlay.style.left = '10px';
+            statsOverlay.style.bottom = '200px';
+            statsOverlay.style.width = '140px';
+            statsOverlay.style.height = '210px';
+            statsOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            statsOverlay.style.color = '#C0C0C0';
+            statsOverlay.style.fontFamily = 'Consolas, Verdana';
+            statsOverlay.style.zIndex = 998;
+            statsOverlay.style.fontSize = '14px';
+            statsOverlay.style.padding = '5px';
+            statsOverlay.style.borderRadius = '5px';
+            document.body.appendChild(statsOverlay);
+
+            userInterface.overlays.botOverlay = botOverlay;
+            userInterface.overlays.serverOverlay = serverOverlay;
+            userInterface.overlays.prefOverlay = prefOverlay;
+            userInterface.overlays.statsOverlay = statsOverlay;
+        },
+
         // Save variable to local storage
         savePreference: function(item, value) {
             window.localStorage.setItem(item, value);
@@ -829,18 +892,6 @@ var userInterface = window.userInterface = (function() {
                     bot.isTopHidden = true;
                 }
             }
-        },
-
-        // Add interface elements to the page.
-        // @param {string} id
-        // @param {string} className
-        // @param style
-        appendDiv: function(id, className, style) {
-            var div = document.createElement('div');
-            if (id) div.id = id;
-            if (className) div.className = className;
-            if (style) div.style = style;
-            document.body.appendChild(div);
         },
 
         // Store FPS data
@@ -982,38 +1033,74 @@ var userInterface = window.userInterface = (function() {
             }
         },
 
+        // Update stats overlay.
+        updateStats: function() {
+            var oContent = [];
+
+            if (bot.scores.length === 0) return;
+
+            oContent.push('games played: ' + bot.scores.length);
+            oContent.push('avg score: ' + Math.round(
+                bot.scores.reduce(function(a, b) { return a + b; }) / (bot.scores.length)));
+
+            for (var i = 0; i < bot.scores.length && i < 10; i++) {
+                oContent.push(i + 1 + '. ' + bot.scores[i]);
+            }
+
+            userInterface.overlays.statsOverlay.innerHTML = oContent.join('<br/>');
+        },
+
         onPrefChange: function() {
-            var generalStyle = '<span style = "opacity: 0.35";>';
-            window.botstatus_overlay.innerHTML = generalStyle + '(T / Right Click) Bot: </span>' +
-                userInterface.handleTextColor(bot.isBotEnabled);
-            window.visualdebugging_overlay.innerHTML = generalStyle +
-                '(Y) Visual debugging: </span>' +
-                userInterface.handleTextColor(window.visualDebugging);
-            window.logdebugging_overlay.innerHTML = generalStyle + '(U) Log debugging: </span>' +
-                userInterface.handleTextColor(window.logDebugging);
-            window.autorespawn_overlay.innerHTML = generalStyle + '(I) Auto respawning: </span>' +
-                userInterface.handleTextColor(window.autoRespawn);
-            window.rendermode_overlay.innerHTML = generalStyle + '(O) Mobile rendering: </span>' +
-                userInterface.handleTextColor(window.mobileRender);
-            window.collision_detection_overlay.innerHTML = generalStyle +
-                '(C) Collision detection: </span>' +
-                userInterface.handleTextColor(window.collisionDetection);
-            window.collision_radius_multiplier_overlay.innerHTML = generalStyle +
-            '(A/S) Collision radius multiplier: ' + window.collisionRadiusMultiplier + ' </span>';
+            // Set static display options here.
+            var oContent = [];
+            var ht = userInterface.handleTextColor;
+
+            oContent.push('version: ' + GM_info.script.version);
+            oContent.push('[T] bot: ' + ht(bot.isBotEnabled));
+            oContent.push('[C] collision detection: ' + ht(window.collisionDetection));
+            oContent.push('[O] mobile rendering: ' + ht(window.mobileRender));
+            oContent.push('[A/S] radius multiplier: ' + window.collisionRadiusMultiplier);
+            oContent.push('[I] auto respawn: ' + ht(window.autoRespawn));
+            oContent.push('[Y] visual debugging: ' + ht(window.visualDebugging));
+            oContent.push('[U] log debugging: ' + ht(window.logDebugging));
+            oContent.push('[Mouse Wheel] zoom');
+            oContent.push('[Z] reset zoom');
+            oContent.push('[ESC] quick respawn');
+            oContent.push('[Q] quit to menu');
+
+            userInterface.overlays.prefOverlay.innerHTML = oContent.join('<br/>');
+
+            if (window.bso !== undefined) {
+                userInterface.overlays.serverOverlay.innerHTML =
+                    window.bso.ip + ':' + window.bso.po;
+            }
         },
 
         onFrameUpdate: function() {
             // Botstatus overlay
-            var generalStyle = '<span style = "opacity: 0.35";>';
-            window.fps_overlay.innerHTML = generalStyle + 'FPS: ' +
-                userInterface.framesPerSecond.fps + '</span>';
+            var oContent = [];
 
-            if (window.position_overlay && window.playing && window.snake !== null) {
+            if (window.playing && window.snake !== null) {
+                oContent.push('fps: ' + userInterface.framesPerSecond.fps);
+
                 // Display the X and Y of the snake
-                window.position_overlay.innerHTML = generalStyle + 'X: ' +
-                    (Math.round(window.snake.xx) || 0) + ' Y: ' +
-                    (Math.round(window.snake.yy) || 0) + '</span>';
+                oContent.push('x: ' +
+                    (Math.round(window.snake.xx) || 0) + ' y: ' +
+                    (Math.round(window.snake.yy) || 0));
+
+                if (window.goalCoordinates) {
+                    oContent.push('target');
+                    oContent.push('x: ' + window.goalCoordinates.x + ' y: ' +
+                        window.goalCoordinates.y);
+                    if (window.goalCoordinates.sz) {
+                        oContent.push('sz: ' + window.goalCoordinates.sz);
+                    }
+                }
+
             }
+
+            userInterface.overlays.botOverlay.innerHTML = oContent.join('<br/>');
+
 
             if (window.playing && window.visualDebugging && bot.isBotRunning) {
                 // Only draw the goal when a bot has a goal.
@@ -1061,7 +1148,7 @@ var userInterface = window.userInterface = (function() {
         },
 
         handleTextColor: function(enabled) {
-            return '<span style=\"opacity: 0.8; color:' +
+            return '<span style=\"color:' +
                 (enabled ? 'green;\">enabled' : 'red;\">disabled') + '</span>';
         }
     };
@@ -1083,56 +1170,15 @@ var userInterface = window.userInterface = (function() {
     userInterface.loadPreference('collisionRadiusMultiplier', 10);
     window.nick.value = userInterface.loadPreference('savedNick', 'Slither.io-bot');
 
+
+    // Hide top score
+    userInterface.hideTop();
+
     // Overlays
-
-    // Top left
-    window.generalstyle =
-        'color: #FFF; font-family: Arial, \'Helvetica Neue\', Helvetica, sans-serif;' +
-            'font-size: 14px; position: fixed; z-index: 7;';
-    userInterface.appendDiv(
-        'version_overlay', 'nsi', window.generalstyle + 'left: 30; top: 50px;');
-    userInterface.appendDiv(
-        'botstatus_overlay', 'nsi', window.generalstyle + 'left: 30; top: 65px;');
-    userInterface.appendDiv(
-        'visualdebugging_overlay', 'nsi', window.generalstyle + 'left: 30; top: 80px;');
-    userInterface.appendDiv(
-        'logdebugging_overlay', 'nsi', window.generalstyle + 'left: 30; top: 95px;');
-    userInterface.appendDiv(
-        'autorespawn_overlay', 'nsi', window.generalstyle + 'left: 30; top: 110px;');
-    userInterface.appendDiv(
-        'rendermode_overlay', 'nsi', window.generalstyle + 'left: 30; top: 125px;');
-    userInterface.appendDiv(
-        'collision_detection_overlay', 'nsi', window.generalstyle + 'left: 30; top: 140px;');
-    userInterface.appendDiv(
-        'collision_radius_multiplier_overlay', 'nsi', window.generalstyle +
-        'left: 30; top: 155px;');
-    userInterface.appendDiv(
-        'resetzoom_overlay', 'nsi', window.generalstyle + 'left: 30; top: 170px;');
-    userInterface.appendDiv(
-        'scroll_overlay', 'nsi', window.generalstyle + 'left: 30; top: 185px;');
-    userInterface.appendDiv(
-        'quickResp_overlay', 'nsi', window.generalstyle + 'left: 30; top: 200px;');
-    userInterface.appendDiv(
-        'quittomenu_overlay', 'nsi', window.generalstyle + 'left: 30; top: 215px;');
-
-    // Set static display options here.
-    var generalStyle = '<span style = "opacity: 0.35";>';
-    window.resetzoom_overlay.innerHTML = generalStyle + '(Z) Reset zoom </span>';
-    window.scroll_overlay.innerHTML = generalStyle + '(Mouse Wheel) Zoom in/out </span>';
-    window.quittomenu_overlay.innerHTML = generalStyle + '(Q) Quit to menu </span>';
-    window.quickResp_overlay.innerHTML = generalStyle + '(ESC) Quick Respawn </span>';
-    window.version_overlay.innerHTML = generalStyle + 'Version: ' + GM_info.script.version;
+    userInterface.initOverlays();
 
     // Pref display
     userInterface.onPrefChange();
-
-    // Bottom right
-    userInterface.appendDiv(
-        'position_overlay', 'nsi', window.generalstyle + 'right: 30; bottom: 120px;');
-    userInterface.appendDiv(
-        'ip_overlay', 'nsi', window.generalstyle + 'right: 30; bottom: 150px;');
-    userInterface.appendDiv(
-        'fps_overlay', 'nsi', window.generalstyle + 'right: 30; bottom: 170px;');
 
     // Listener for mouse wheel scroll - used for setZoom function
     document.body.addEventListener('mousewheel', canvas.setZoom);
@@ -1156,8 +1202,6 @@ var userInterface = window.userInterface = (function() {
 
     // Start!
     Math.atan2 = canvas.fastAtan2;
-    userInterface.onPrefChange();
-    userInterface.hideTop();
     bot.launchBot();
     window.startInterval = setInterval(bot.startBot, 1000);
     userInterface.oefTimer();
