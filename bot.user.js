@@ -593,7 +593,7 @@ var bot = window.bot = (function() {
 
             var fullHeadCircle = canvas.circle(
                 xx, yy,
-                r * widthMult * 2 / 5
+                r * widthMult / 2
             );
 
             var sidecircle_r = canvas.circle(
@@ -723,7 +723,9 @@ var bot = window.bot = (function() {
             for (i = 0; i < foodClusters.length; i++) {
                 var pang = Math.round(foodClusters[i].a * 2.546) / 2.546;
                 if (bot.collisionAngles[pang] === undefined ||
-                    bot.collisionAngles[pang].distance - Math.pow(window.getSnakeWidth(), 2) >
+                    bot.collisionAngles[pang].distance - Math.pow(window.getSnakeWidth(), 2) -
+                    Math.pow(window.getSnakeWidth(
+                        window.snakes[bot.collisionAngles[pang].snake].sc), 2) >
                     foodClusters[i].distance) {
                     bot.currentFood = foodClusters[i];
                     return;
@@ -983,7 +985,7 @@ var userInterface = window.userInterface = (function() {
         onPrefChange: function() {
             var generalStyle = '<span style = "opacity: 0.35";>';
             window.botstatus_overlay.innerHTML = generalStyle + '(T / Right Click) Bot: </span>' +
-                userInterface.handleTextColor(bot.isBotRunning);
+                userInterface.handleTextColor(bot.isBotEnabled);
             window.visualdebugging_overlay.innerHTML = generalStyle +
                 '(Y) Visual debugging: </span>' +
                 userInterface.handleTextColor(window.visualDebugging);
