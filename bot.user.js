@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.7.5
+// @version      1.8.0
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -322,12 +322,7 @@ var canvas = window.canvas = (function() {
 })();
 
 var bot = window.bot = (function() {
-    // Save the original slither.io onmousemove function so we can re enable it back later
-    var original_onmousemove = window.onmousemove;
-
     return {
-        ranOnce: false,
-        tickCounter: 0,
         isBotRunning: false,
         isBotEnabled: true,
         lookForFood: false,
@@ -339,82 +334,15 @@ var bot = window.bot = (function() {
         sectorBox: {},
         currentFood: {},
 
-        // Loop for running the bot
-        loop: function() {
-            // If the game and the bot are running
-            if (window.playing && bot.isBotEnabled) {
-                bot.ranOnce = true;
-                bot.collisionLoop();
-            } else if (bot.ranOnce) {
-                bot.stopBot();
-            }
-        },
-
-        startBot: function() {
-            if (window.autoRespawn && !window.playing && bot.isBotEnabled && bot.ranOnce &&
-                !bot.isBotRunning) {
-                bot.connectBot();
-                if (window.lastscore && window.lastscore.childNodes[1]) {
-                    bot.scores.push(parseInt(window.lastscore.childNodes[1].innerHTML));
-                    bot.scores.sort(function(a, b) { return b - a; });
-                    userInterface.updateStats();
-                }
-            }
-        },
-
-        launchBot: function() {
-            window.log('Starting Bot.');
-            bot.isBotRunning = true;
-            // Removed the onmousemove listener so we can
-            // move the snake manually by setting coordinates
-            window.onmousemove = function() { };
-        },
-
-        // Stops the bot
-        stopBot: function() {
-            window.log('Stopping Bot.');
-            window.setAcceleration(0); // Disable the "sprint"
-            bot.isBotRunning = false;
-            // Re-enable the original onmousemove function
-            window.onmousemove = original_onmousemove;
-        },
-
-        // Connects the bot
-        connectBot: function() {
-            if (!window.autoRespawn) return;
-            bot.stopBot(); // Just in case
-            window.log('Connecting...');
-            window.connect();
-
-            // Wait until we're playing to start the bot
-            window.botCanStart = setInterval(function() {
-                if (window.playing) {
-                    bot.launchBot();
-                    clearInterval(window.botCanStart);
-                }
-            }, 100);
-        },
-
-        forceConnect: function() {
-            if (!window.connect) {
-                return;
-            }
-            window.forcing = true;
-            if (!window.bso) {
-                window.bso = {};
-            }
-            window.currentIP = window.bso.ip + ':' + window.bso.po;
-            var srv = window.currentIP.trim().split(':');
-            window.bso.ip = srv[0];
-            window.bso.po = srv[1];
-            window.connect();
-        },
-
         quickRespawn: function() {
             window.dead_mtm = 0;
             window.login_fr = 0;
-        },
 
+            bot.isBotRunning = false;
+            window.forcing = true;
+            window.connect();
+            window.forcing = false;
+        },
 
         // angleBetween - get the smallest angle between two angles (0-pi)
         angleBetween: function(a1, a2) {
@@ -853,7 +781,7 @@ var bot = window.bot = (function() {
 
         // Timer version of food check
         foodTimer: function() {
-            if (window.playing && bot.isBotRunning && bot.lookForFood &&
+            if (window.playing && bot.lookForFood &&
                 window.snake !== null && window.snake.alive_amt === 1) {
                 bot.computeFoodGoal();
                 window.goalCoordinates = bot.currentFood;
@@ -870,6 +798,7 @@ var userInterface = window.userInterface = (function() {
     var original_onmouseDown = window.onmousedown;
     var original_oef = window.oef;
     var original_redraw = window.redraw;
+    var original_onmousemove = window.onmousemove;
 
     window.oef = function() {};
     window.redraw = function() {};
@@ -944,6 +873,7 @@ var userInterface = window.userInterface = (function() {
         // Save variable to local storage
         savePreference: function(item, value) {
             window.localStorage.setItem(item, value);
+            userInterface.onPrefChange();
         },
 
         // Load a variable from local storage
@@ -963,6 +893,7 @@ var userInterface = window.userInterface = (function() {
                 window.log('No setting found for ' + preference +
                     '. Used default: ' + window[preference]);
             }
+            userInterface.onPrefChange();
             return window[preference];
         },
 
@@ -970,6 +901,7 @@ var userInterface = window.userInterface = (function() {
         playButtonClickListener: function() {
             userInterface.saveNick();
             userInterface.loadPreference('autoRespawn', false);
+            userInterface.onPrefChange();
         },
 
         // Preserve nickname
@@ -1008,13 +940,7 @@ var userInterface = window.userInterface = (function() {
             if (window.playing) {
                 // Letter `T` to toggle bot
                 if (e.keyCode === 84) {
-                    if (bot.isBotRunning) {
-                        bot.stopBot();
-                        bot.isBotEnabled = false;
-                    } else {
-                        bot.launchBot();
-                        bot.isBotEnabled = true;
-                    }
+                    bot.isBotEnabled = !bot.isBotEnabled;
                 }
                 // Letter 'U' to toggle debugging (console)
                 if (e.keyCode === 85) {
@@ -1085,8 +1011,6 @@ var userInterface = window.userInterface = (function() {
         },
 
         onmousedown: function(e) {
-            original_onmouseDown(e);
-            e = e || window.event;
             if (window.playing) {
                 switch (e.which) {
                     // "Left click" to manually speed up the slither
@@ -1096,15 +1020,11 @@ var userInterface = window.userInterface = (function() {
                         break;
                         // "Right click" to toggle bot in addition to the letter "T"
                     case 3:
-                        if (bot.isBotRunning) {
-                            bot.stopBot();
-                            bot.isBotEnabled = false;
-                        } else {
-                            bot.launchBot();
-                            bot.isBotEnabled = true;
-                        }
+                        bot.isBotEnabled = !bot.isBotEnabled;
                         break;
                 }
+            } else {
+                original_onmouseDown(e);
             }
             userInterface.onPrefChange();
         },
@@ -1165,11 +1085,6 @@ var userInterface = window.userInterface = (function() {
             oContent.push('[Q] quit to menu');
 
             userInterface.overlays.prefOverlay.innerHTML = oContent.join('<br/>');
-
-            if (window.bso !== undefined) {
-                userInterface.overlays.serverOverlay.innerHTML =
-                    window.bso.ip + ':' + window.bso.po;
-            }
         },
 
         onFrameUpdate: function() {
@@ -1193,14 +1108,19 @@ var userInterface = window.userInterface = (function() {
                     }
                 }
 
+                if (window.bso !== undefined && userInterface.overlays.serverOverlay.innerHTML !==
+                    window.bso.ip + ':' + window.bso.po) {
+                    userInterface.overlays.serverOverlay.innerHTML =
+                        window.bso.ip + ':' + window.bso.po;
+                }
             }
 
             userInterface.overlays.botOverlay.innerHTML = oContent.join('<br/>');
 
 
-            if (window.playing && window.visualDebugging && bot.isBotRunning) {
+            if (window.playing && window.visualDebugging) {
                 // Only draw the goal when a bot has a goal.
-                if (window.goalCoordinates) {
+                if (window.goalCoordinates && bot.isBotEnabled) {
                     var headCoord = {x: window.snake.xx, y: window.snake.yy};
                     canvas.drawLine(
                         headCoord,
@@ -1216,7 +1136,30 @@ var userInterface = window.userInterface = (function() {
             canvas.maintainZoom();
             original_oef();
             original_redraw();
-            if (bot.isBotRunning) bot.loop();
+
+            if (window.playing && bot.isBotEnabled) {
+                if (!bot.isBotRunning) {
+                    window.onmousemove = function() { };
+                }
+                bot.isBotRunning = true;
+                bot.collisionLoop();
+            } else if (bot.isBotEnabled && bot.isBotRunning) {
+                bot.isBotRunning = false;
+                if (window.lastscore && window.lastscore.childNodes[1]) {
+                    bot.scores.push(parseInt(window.lastscore.childNodes[1].innerHTML));
+                    bot.scores.sort(function(a, b) { return b - a; });
+                    userInterface.updateStats();
+                }
+
+                if (window.autoRespawn) {
+                    window.connect();
+                }
+            }
+
+            if (!bot.isBotEnabled || !bot.isBotRunning) {
+                window.onmousemove = original_onmousemove;
+            }
+
             userInterface.onFrameUpdate();
             setTimeout(userInterface.oefTimer, (1000 / TARGET_FPS) - (Date.now() - start));
         },
@@ -1257,6 +1200,12 @@ var userInterface = window.userInterface = (function() {
     window.onmousedown = userInterface.onmousedown;
     window.onresize = userInterface.onresize;
 
+     // Hide top score
+    userInterface.hideTop();
+
+    // Overlays
+    userInterface.initOverlays();
+
     // Load preferences
     userInterface.loadPreference('logDebugging', false);
     userInterface.loadPreference('visualDebugging', false);
@@ -1265,16 +1214,6 @@ var userInterface = window.userInterface = (function() {
     userInterface.loadPreference('collisionDetection', true);
     userInterface.loadPreference('collisionRadiusMultiplier', 10);
     window.nick.value = userInterface.loadPreference('savedNick', 'Slither.io-bot');
-
-
-    // Hide top score
-    userInterface.hideTop();
-
-    // Overlays
-    userInterface.initOverlays();
-
-    // Pref display
-    userInterface.onPrefChange();
 
     // Listener for mouse wheel scroll - used for setZoom function
     document.body.addEventListener('mousewheel', canvas.setZoom);
@@ -1297,8 +1236,5 @@ var userInterface = window.userInterface = (function() {
     setInterval(userInterface.framesPerSecond.fpsTimer, 80);
 
     // Start!
-    Math.atan2 = canvas.fastAtan2;
-    bot.launchBot();
-    window.startInterval = setInterval(bot.startBot, 1000);
     userInterface.oefTimer();
 })();
