@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.7.3
+// @version      1.7.5
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -415,6 +415,61 @@ var bot = window.bot = (function() {
             window.login_fr = 0;
         },
 
+
+        // angleBetween - get the smallest angle between two angles (0-pi)
+        angleBetween: function(a1, a2) {
+            var r1 = 0.0;
+            var r2 = 0.0;
+
+            r1 = (a1 - a2) % Math.PI;
+            r2 = (a2 - a1) % Math.PI;
+
+            return r1 < r2 ? -r1 : r2;
+        },
+
+        // Avoid headPoint
+        avoidHeadPoint: function(collisionPoint) {
+            var cehang = canvas.fastAtan2(
+                collisionPoint.yy - window.snake.yy, collisionPoint.xx - window.snake.xx);
+            var diff = bot.angleBetween(window.snake.ehang, cehang);
+
+            // var dir = diff > 0 ? -Math.PI / 2 : Math.PI / 2;
+            // bot.changeHeading(dir);
+            // return;
+
+            if (Math.abs(diff) > 3 * Math.PI / 4) {
+                var dir = diff > 0 ? -Math.PI / 2 : Math.PI / 2;
+                bot.changeHeading(dir);
+            } else {
+                bot.avoidCollisionPoint(collisionPoint);
+            }
+        },
+
+        // Change heading by ang
+        // +0-pi turn left
+        // -0-pi turn right
+
+        changeHeading: function(angle) {
+            var heading = {
+                x: window.snake.xx + 500 * window.snake.cos,
+                y: window.snake.yy + 500 * window.snake.sin
+            };
+
+            var cos = Math.cos(-angle);
+            var sin = Math.sin(-angle);
+
+            window.goalCoordinates = {
+                x: Math.round(
+                    cos * (heading.x - window.snake.xx) -
+                    sin * (heading.y - window.snake.yy) + window.snake.xx),
+                y: Math.round(
+                    sin * (heading.x - window.snake.xx) +
+                    cos * (heading.y - window.snake.yy) + window.snake.yy)
+            };
+
+            canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+        },
+
         // Avoid collison point by ang
         // ang radians <= Math.PI (180deg)
         avoidCollisionPoint: function(collisionPoint, ang) {
@@ -467,12 +522,18 @@ var bot = window.bot = (function() {
         // get collision angle index, expects angle +/i 0 to Math.PI
         getAngleIndex: function(angle) {
             const ARCSIZE = Math.PI / 4;
+            var index;
 
             if (angle < 0) {
                 angle += 2 * Math.PI;
             }
 
-            return Math.round(angle * (1 / ARCSIZE));
+            index = Math.round(angle * (1 / ARCSIZE));
+
+            if (index === (2 * Math.PI) / ARCSIZE) {
+                return 0;
+            }
+            return index;
         },
 
         // Add to collisionAngles if distance is closer
@@ -574,8 +635,7 @@ var bot = window.bot = (function() {
             bot.collisionPoints.sort(bot.sortDistance);
             if (window.visualDebugging) {
                 for (var i = 0; i < bot.collisionAngles.length; i++) {
-                    if (bot.collisionAngles[i] !== undefined)
-                    {
+                    if (bot.collisionAngles[i] !== undefined) {
                         canvas.drawLine(
                         {x: window.snake.xx, y: window.snake.yy},
                         {x: bot.collisionAngles[i].x, y: bot.collisionAngles[i].y},
@@ -635,8 +695,8 @@ var bot = window.bot = (function() {
             if (window.visualDebugging) {
                 canvas.drawCircle(fullHeadCircle, 'red');
                 canvas.drawCircle(headCircle, 'blue', false);
-                canvas.drawCircle(sidecircle_r, 'orange', true, 0.3);
-                canvas.drawCircle(sidecircle_l, 'orange', true, 0.3);
+                // canvas.drawCircle(sidecircle_r, 'orange', true, 0.3);
+                // canvas.drawCircle(sidecircle_l, 'orange', true, 0.3);
             }
 
             bot.getCollisionPoints();
@@ -667,9 +727,10 @@ var bot = window.bot = (function() {
                     } else {
                         window.setAcceleration(0);
                     }
-                    bot.avoidCollisionPoint({
+                    bot.avoidHeadPoint({
                         xx: window.snakes[bot.collisionPoints[i].snake].xx,
-                        yy: window.snakes[bot.collisionPoints[i].snake].yy });
+                        yy: window.snakes[bot.collisionPoints[i].snake].yy
+                    });
                     return true;
                 }
             }
@@ -736,8 +797,9 @@ var bot = window.bot = (function() {
             for (i = 0; i < foodClusters.length; i++) {
                 var aIndex = bot.getAngleIndex(foodClusters[i].a);
                 if (bot.collisionAngles[aIndex] === undefined ||
-                    bot.collisionAngles[aIndex].distance - Math.pow(window.getSnakeWidth(), 2) >
-                    foodClusters[i].distance) {
+                    (bot.collisionAngles[aIndex].distance - Math.pow(window.getSnakeWidth(), 2) >
+                    foodClusters[i].distance && foodClusters[i].sz > 10)
+                    ) {
                     bot.currentFood = foodClusters[i];
                     return;
                 }
@@ -811,8 +873,6 @@ var userInterface = window.userInterface = (function() {
 
     window.oef = function() {};
     window.redraw = function() {};
-
-
 
     return {
         overlays: {},
