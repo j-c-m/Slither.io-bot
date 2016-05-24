@@ -566,7 +566,8 @@ var bot = window.bot = (function() {
 
             if (canvas.getDistance2(bot.MID_X, bot.MID_Y, window.snake.xx, window.snake.yy) >
                 Math.pow(bot.MAP_R - 1000, 2)) {
-                var midAng = canvas.fastAtan2(window.snake.yy - bot.MID_X, window.snake.xx - bot.MID_Y);
+                var midAng = canvas.fastAtan2(
+                    window.snake.yy - bot.MID_X, window.snake.xx - bot.MID_Y);
                 scPoint = {
                     xx: bot.MID_X + bot.MAP_R * Math.cos(midAng),
                     yy: bot.MID_Y + bot.MAP_R * Math.sin(midAng),
