@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.8.4
+// @version      1.8.5
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -856,6 +856,7 @@ var userInterface = window.userInterface = (function() {
             botOverlay.style.fontSize = '14px';
             botOverlay.style.padding = '5px';
             botOverlay.style.borderRadius = '5px';
+            botOverlay.className = 'nsi';
             document.body.appendChild(botOverlay);
 
             var serverOverlay = document.createElement('div');
@@ -868,6 +869,7 @@ var userInterface = window.userInterface = (function() {
             serverOverlay.style.fontFamily = 'Consolas, Verdana';
             serverOverlay.style.zIndex = 999;
             serverOverlay.style.fontSize = '14px';
+            serverOverlay.className = 'nsi';
             document.body.appendChild(serverOverlay);
 
             var prefOverlay = document.createElement('div');
@@ -883,6 +885,7 @@ var userInterface = window.userInterface = (function() {
             prefOverlay.style.fontSize = '14px';
             prefOverlay.style.padding = '5px';
             prefOverlay.style.borderRadius = '5px';
+            prefOverlay.className = 'nsi';
             document.body.appendChild(prefOverlay);
 
             var statsOverlay = document.createElement('div');
@@ -898,6 +901,7 @@ var userInterface = window.userInterface = (function() {
             statsOverlay.style.fontSize = '14px';
             statsOverlay.style.padding = '5px';
             statsOverlay.style.borderRadius = '5px';
+            statsOverlay.className = 'nsi';
             document.body.appendChild(statsOverlay);
 
             userInterface.overlays.botOverlay = botOverlay;
