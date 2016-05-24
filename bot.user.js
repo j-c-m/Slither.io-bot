@@ -824,9 +824,13 @@ var bot = window.bot = (function() {
         foodTimer: function() {
             if (window.playing && bot.lookForFood &&
                 window.snake !== null && window.snake.alive_amt === 1) {
-                bot.computeFoodGoal();
-                window.goalCoordinates = bot.currentFood;
-                canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+                if (window.foodDetection) {
+                    bot.computeFoodGoal();
+                    window.goalCoordinates = bot.currentFood;
+                    canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+                } else {
+                    window.goalCoordinates = {};
+                }
             }
             bot.foodTimeout = undefined;
         }
@@ -1022,6 +1026,12 @@ var userInterface = window.userInterface = (function() {
                 if (e.keyCode === 79) {
                     userInterface.toggleMobileRendering(!window.mobileRender);
                 }
+                // Letter 'F' to toggle Food detection
+                if (e.keyCode === 70) {
+                    window.foodDetection = !window.foodDetection;
+                    console.log('foodDetection set to: ' + window.foodDetection);
+                    userInterface.savePreference('foodDetection', window.foodDetection);
+                }
                 // Letter 'C' to toggle Collision detection / enemy avoidance
                 if (e.keyCode === 67) {
                     window.collisionDetection = !window.collisionDetection;
@@ -1137,6 +1147,7 @@ var userInterface = window.userInterface = (function() {
 
             oContent.push('version: ' + GM_info.script.version);
             oContent.push('[T] bot: ' + ht(bot.isBotEnabled));
+            oContent.push('[F] food detection: ' + ht(window.foodDetection));
             oContent.push('[C] collision detection: ' + ht(window.collisionDetection));
             oContent.push('[O] mobile rendering: ' + ht(window.mobileRender));
             oContent.push('[A/S] radius multiplier: ' + window.collisionRadiusMultiplier);
@@ -1218,7 +1229,7 @@ var userInterface = window.userInterface = (function() {
                 }
             }
 
-            if (!bot.isBotEnabled || !bot.isBotRunning) {
+            if (!bot.isBotEnabled || !bot.isBotRunning || !window.foodDetection && bot.lookForFood) {
                 window.onmousemove = original_onmousemove;
             }
 
@@ -1274,6 +1285,7 @@ var userInterface = window.userInterface = (function() {
     userInterface.loadPreference('visualDebugging', false);
     userInterface.loadPreference('autoRespawn', false);
     userInterface.loadPreference('mobileRender', false);
+    userInterface.loadPreference('foodDetection', true);
     userInterface.loadPreference('collisionDetection', true);
     userInterface.loadPreference('collisionRadiusMultiplier', 10);
     window.nick.value = userInterface.loadPreference('savedNick', 'Slither.io-bot');
