@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.8.2
+// @version      1.8.3
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -331,6 +331,7 @@ var bot = window.bot = (function() {
         scores: [],
         foodTimeout: undefined,
         sectorBoxSide: 0,
+        defaultAccel: 0,
         sectorBox: {},
         currentFood: {},
         MID_X: 0,
@@ -666,7 +667,7 @@ var bot = window.bot = (function() {
                 );
 
                 if (canvas.circleIntersect(headCircle, collisionCircle)) {
-                    window.setAcceleration(0);
+                    window.setAcceleration(bot.defaultAccel);
                     bot.avoidCollisionPoint(bot.collisionPoints[i]);
                     return true;
                 }
@@ -683,7 +684,7 @@ var bot = window.bot = (function() {
                         if (window.snakes[bot.collisionPoints[i].snake].sp > 10) {
                             window.setAcceleration(1);
                         } else {
-                            window.setAcceleration(0);
+                            window.setAcceleration(bot.defaultAccel);
                         }
                         bot.avoidHeadPoint({
                             xx: window.snakes[bot.collisionPoints[i].snake].xx,
@@ -693,7 +694,7 @@ var bot = window.bot = (function() {
                     }
                 }
             }
-            window.setAcceleration(0);
+            window.setAcceleration(bot.defaultAccel);
             return false;
         },
 
@@ -783,7 +784,7 @@ var bot = window.bot = (function() {
                 }
             }
 
-            return 0;
+            return bot.defaultAccel;
         },
 
         // Loop version of collision check
@@ -1050,8 +1051,7 @@ var userInterface = window.userInterface = (function() {
                 switch (e.which) {
                     // "Left click" to manually speed up the slither
                     case 1:
-                        window.setAcceleration(1);
-                        window.log('Manual boost...');
+                        bot.defaultAccel = 1;
                         break;
                         // "Right click" to toggle bot in addition to the letter "T"
                     case 3:
@@ -1062,6 +1062,10 @@ var userInterface = window.userInterface = (function() {
                 original_onmouseDown(e);
             }
             userInterface.onPrefChange();
+        },
+
+        onmouseup: function() {
+            bot.defaultAccel = 0;
         },
 
         // Manual mobile rendering
@@ -1231,6 +1235,7 @@ var userInterface = window.userInterface = (function() {
     window.play_btn.btnf.addEventListener('click', userInterface.playButtonClickListener);
     document.onkeydown = userInterface.onkeydown;
     window.onmousedown = userInterface.onmousedown;
+    window.addEventListener('mouseup', userInterface.onmouseup);
     window.onresize = userInterface.onresize;
 
      // Hide top score
