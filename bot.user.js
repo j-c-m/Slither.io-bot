@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.8.3
+// @version      1.8.4
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -906,6 +906,15 @@ var userInterface = window.userInterface = (function() {
             userInterface.overlays.statsOverlay = statsOverlay;
         },
 
+        toggleOverlays: function() {
+            Object.keys(userInterface.overlays).forEach(function(okey) {
+                var oVis = userInterface.overlays[okey].style.visibility !== 'hidden' ?
+                    'hidden' : 'visible';
+                userInterface.overlays[okey].style.visibility = oVis;
+                window.visualDebugging = oVis === 'visible';
+            });
+        },
+
         // Save variable to local storage
         savePreference: function(item, value) {
             window.localStorage.setItem(item, value);
@@ -952,8 +961,8 @@ var userInterface = window.userInterface = (function() {
             for (var i = 0; i < nsidivs.length; i++) {
                 if (nsidivs[i].style.top === '4px' && nsidivs[i].style.width === '300px') {
                     nsidivs[i].style.visibility = 'hidden';
-                    nsidivs[i].style.zIndex = -1;
                     bot.isTopHidden = true;
+                    window.topscore = nsidivs[i];
                 }
             }
         },
@@ -995,6 +1004,10 @@ var userInterface = window.userInterface = (function() {
                     window.autoRespawn = !window.autoRespawn;
                     console.log('Automatic Respawning set to: ' + window.autoRespawn);
                     userInterface.savePreference('autoRespawn', window.autoRespawn);
+                }
+                // Letter 'H' to toggle hidden mode
+                if (e.keyCode === 72) {
+                    userInterface.toggleOverlays();
                 }
                 // Letter 'O' to change rendermode (visual)
                 if (e.keyCode === 79) {
@@ -1052,6 +1065,9 @@ var userInterface = window.userInterface = (function() {
                     // "Left click" to manually speed up the slither
                     case 1:
                         bot.defaultAccel = 1;
+                        if (!bot.isBotEnabled) {
+                            original_onmouseDown(e);
+                        }
                         break;
                         // "Right click" to toggle bot in addition to the letter "T"
                     case 3:
