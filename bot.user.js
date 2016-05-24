@@ -333,6 +333,9 @@ var bot = window.bot = (function() {
         sectorBoxSide: 0,
         sectorBox: {},
         currentFood: {},
+        MID_X: 0,
+        MID_Y: 0,
+        MAP_R: 0,
 
         quickRespawn: function() {
             window.dead_mtm = 0;
@@ -560,6 +563,26 @@ var bot = window.bot = (function() {
                     }
                 }
             }
+
+            if (canvas.getDistance2(bot.MID_X, bot.MID_Y, window.snake.xx, window.snake.yy) >
+                Math.pow(bot.MAP_R - 1000, 2)) {
+                var midAng = canvas.fastAtan2(window.snake.yy - bot.MID_X, window.snake.xx - bot.MID_Y);
+                scPoint = {
+                    xx: bot.MID_X + bot.MAP_R * Math.cos(midAng),
+                    yy: bot.MID_Y + bot.MAP_R * Math.sin(midAng),
+                    snake: -1
+                };
+                bot.collisionPoints.push(scPoint);
+                if (window.visualDebugging) {
+                    canvas.drawCircle(canvas.circle(
+                        scPoint.xx,
+                        scPoint.yy,
+                        window.getSnakeWidth(1) * 5
+                    ), 'yellow', false);
+                }
+            }
+
+
             bot.collisionPoints.sort(bot.sortDistance);
             if (window.visualDebugging) {
                 for (var i = 0; i < bot.collisionAngles.length; i++) {
@@ -631,16 +654,14 @@ var bot = window.bot = (function() {
             if (bot.collisionPoints.length === 0) return false;
 
             for (var i = 0; i < bot.collisionPoints.length; i++) {
+                // -1 snake is special case for non snake object.
+                var colR = bot.collisionPoints[i].snake === -1 ? window.getSnakeWidth(1) * 5 :
+                    window.getSnakeWidth(window.snakes[bot.collisionPoints[i].snake].sc) / 2;
+
                 var collisionCircle = canvas.circle(
                     bot.collisionPoints[i].xx,
                     bot.collisionPoints[i].yy,
-                    window.getSnakeWidth(window.snakes[bot.collisionPoints[i].snake].sc) / 2
-                );
-
-                var eHeadCircle = canvas.circle(
-                    window.snakes[bot.collisionPoints[i].snake].xx,
-                    window.snakes[bot.collisionPoints[i].snake].yy,
-                    window.getSnakeWidth(window.snakes[bot.collisionPoints[i].snake].sc) / 2
+                    colR
                 );
 
                 if (canvas.circleIntersect(headCircle, collisionCircle)) {
@@ -649,17 +670,26 @@ var bot = window.bot = (function() {
                     return true;
                 }
 
-                if (canvas.circleIntersect(fullHeadCircle, eHeadCircle)) {
-                    if (window.snakes[bot.collisionPoints[i].snake].sp > 10) {
-                        window.setAcceleration(1);
-                    } else {
-                        window.setAcceleration(0);
+                if (bot.collisionPoints[i].snake !== -1) {
+                    var eHeadCircle = canvas.circle(
+                        window.snakes[bot.collisionPoints[i].snake].xx,
+                        window.snakes[bot.collisionPoints[i].snake].yy,
+                        colR
+                    );
+
+
+                    if (canvas.circleIntersect(fullHeadCircle, eHeadCircle)) {
+                        if (window.snakes[bot.collisionPoints[i].snake].sp > 10) {
+                            window.setAcceleration(1);
+                        } else {
+                            window.setAcceleration(0);
+                        }
+                        bot.avoidHeadPoint({
+                            xx: window.snakes[bot.collisionPoints[i].snake].xx,
+                            yy: window.snakes[bot.collisionPoints[i].snake].yy
+                        });
+                        return true;
                     }
-                    bot.avoidHeadPoint({
-                        xx: window.snakes[bot.collisionPoints[i].snake].xx,
-                        yy: window.snakes[bot.collisionPoints[i].snake].yy
-                    });
-                    return true;
                 }
             }
             window.setAcceleration(0);
@@ -732,7 +762,7 @@ var bot = window.bot = (function() {
                     return;
                 }
             }
-            bot.currentFood = {x: 20000, y: 20000};
+            bot.currentFood = {x: bot.MID_X, y: bot.MID_Y};
         },
 
         foodAccel: function() {
@@ -757,6 +787,10 @@ var bot = window.bot = (function() {
 
         // Loop version of collision check
         collisionLoop: function() {
+            bot.MID_X = window.grd;
+            bot.MID_Y = window.grd;
+            bot.MAP_R = window.grd * 0.98;
+
             bot.sectorBoxSide = Math.floor(Math.sqrt(window.sectors.length)) * window.sector_size;
             bot.sectorBox = canvas.rect(
                 window.snake.xx - (bot.sectorBoxSide / 2),
@@ -1138,9 +1172,7 @@ var userInterface = window.userInterface = (function() {
             original_redraw();
 
             if (window.playing && bot.isBotEnabled && window.snake !== null) {
-                if (!bot.isBotRunning) {
-                    window.onmousemove = function() { };
-                }
+                window.onmousemove = function() { };
                 bot.isBotRunning = true;
                 bot.collisionLoop();
             } else if (bot.isBotEnabled && bot.isBotRunning) {
