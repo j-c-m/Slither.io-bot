@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.8.6
+// @version      1.8.7
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -783,7 +783,7 @@ var bot = window.bot = (function () {
 
                 if (
                     bot.collisionAngles[aIndex] && bot.collisionAngles[aIndex].distance >
-                    bot.currentFood.distance * 2) {
+                    bot.currentFood.distance * 2 && bot.currentFood.da < Math.PI / 3) {
                     return 1;
                 }
 
