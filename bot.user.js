@@ -7,7 +7,7 @@ The MIT License (MIT)
 // ==UserScript==
 // @name         Slither.io Bot Championship Edition
 // @namespace    https://github.com/j-c-m/Slither.io-bot
-// @version      1.8.8
+// @version      1.8.9
 // @description  Slither.io Bot Championship Edition
 // @author       Jesse Miller
 // @match        http://slither.io/
@@ -609,8 +609,6 @@ var bot = window.bot = (function () {
 
         // Checks to see if you are going to collide with anything in the collision detection radius
         checkCollision: function (r) {
-            if (!window.collisionDetection) return false;
-
             r = Number(r);
             var xx = Number(window.snake.xx.toFixed(3));
             var yy = Number(window.snake.yy.toFixed(3));
@@ -1027,12 +1025,6 @@ var userInterface = window.userInterface = (function () {
                 if (e.keyCode === 79) {
                     userInterface.toggleMobileRendering(!window.mobileRender);
                 }
-                // Letter 'C' to toggle Collision detection / enemy avoidance
-                if (e.keyCode === 67) {
-                    window.collisionDetection = !window.collisionDetection;
-                    console.log('collisionDetection set to: ' + window.collisionDetection);
-                    userInterface.savePreference('collisionDetection', window.collisionDetection);
-                }
                 // Letter 'A' to increase collision detection radius
                 if (e.keyCode === 65) {
                     window.collisionRadiusMultiplier++;
@@ -1142,7 +1134,6 @@ var userInterface = window.userInterface = (function () {
 
             oContent.push('version: ' + GM_info.script.version);
             oContent.push('[T] bot: ' + ht(bot.isBotEnabled));
-            oContent.push('[C] collision detection: ' + ht(window.collisionDetection));
             oContent.push('[O] mobile rendering: ' + ht(window.mobileRender));
             oContent.push('[A/S] radius multiplier: ' + window.collisionRadiusMultiplier);
             oContent.push('[I] auto respawn: ' + ht(window.autoRespawn));
@@ -1279,7 +1270,6 @@ var userInterface = window.userInterface = (function () {
     userInterface.loadPreference('visualDebugging', false);
     userInterface.loadPreference('autoRespawn', false);
     userInterface.loadPreference('mobileRender', false);
-    userInterface.loadPreference('collisionDetection', true);
     userInterface.loadPreference('collisionRadiusMultiplier', 10);
     window.nick.value = userInterface.loadPreference('savedNick', 'Slither.io-bot');
 
