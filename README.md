@@ -22,7 +22,6 @@ U | Log debugging
 Y | Visual debugging
 I | Automatic Respawning
 O | **Mobile rendering - Try this if you experience lag**
-C | Enemy avoidance / Collision prevention
 A / S | Collision radius multiplier increase / decrease
 Z | Reset zoom
 Mouse wheel | Zoom in/out
