@@ -588,7 +588,7 @@ var bot = window.bot = (function () {
                         x: Math.round(f.xx),
                         y: Math.round(f.yy),
                         ang: ang,
-                        da: bot.angleBetween(ang, window.snake.ehang),
+                        da: Math.abs(bot.angleBetween(ang, window.snake.ehang)),
                         distance: f.distance,
                         sz: f.sz,
                         score: Math.pow(f.sz, 2) / f.distance
