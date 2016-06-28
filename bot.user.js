@@ -347,7 +347,7 @@ var bot = window.bot = (function () {
             // base speed
             speedBase: 5.78,
             // front angle size
-            frontAngle: 2 * Math.PI / 3,
+            frontAngle: Math.PI / 2,
             // percent of angles covered by same snake to be considered an encircle attempt
             enCircleThreshold: 0.5625,
             // percent of angles covered by all snakes to move to safety
@@ -886,9 +886,10 @@ var bot = window.bot = (function () {
             if (bot.foodAngles[0] !== undefined && bot.foodAngles[0].sz > 0) {
                 bot.currentFood = { x: bot.foodAngles[0].x,
                                     y: bot.foodAngles[0].y,
-                                    sz: bot.foodAngles[0].sz };
+                                    sz: bot.foodAngles[0].sz,
+                                    da: bot.foodAngles[0].da };
             } else {
-                bot.currentFood = { x: bot.MID_X, y: bot.MID_Y };
+                bot.currentFood = { x: bot.MID_X, y: bot.MID_Y, sz: 0 };
             }
         },
 
@@ -896,16 +897,17 @@ var bot = window.bot = (function () {
             var aIndex = 0;
 
             if (bot.currentFood && bot.currentFood.sz > bot.opt.foodAccelSz) {
-                aIndex = bot.getAngleIndex(bot.currentFood.a);
+                aIndex = bot.getAngleIndex(bot.currentFood.ang);
 
                 if (
                     bot.collisionAngles[aIndex] && bot.collisionAngles[aIndex].distance >
-                    bot.currentFood.distance + bot.snakeWidth * bot.opt.radiusMult
+                    bot.currentFood.distance + bot.snakeRadius * bot.opt.radiusMult
                     && bot.currentFood.da < bot.opt.foodAccelDa) {
                     return 1;
                 }
 
-                if (bot.collisionAngles[aIndex] === undefined) {
+                if (bot.collisionAngles[aIndex] === undefined
+                    && bot.currentFood.da < bot.opt.foodAccelDa) {
                     return 1;
                 }
             }
@@ -932,6 +934,8 @@ var bot = window.bot = (function () {
             bot.speedMult = window.snake.sp / bot.opt.speedBase;
             bot.snakeRadius = bot.getSnakeWidth() / 2;
             bot.snakeWidth = bot.getSnakeWidth();
+            bot.snakeLength = Math.floor(15 * (window.fpsls[window.snake.sct] + window.snake.fam /
+                window.fmlts[window.snake.sct] - 1) - 5)
 
             bot.sidecircle_r = canvas.circle(
                 window.snake.lnp.xx -
