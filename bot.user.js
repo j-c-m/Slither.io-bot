@@ -627,7 +627,7 @@ var bot = window.bot = (function () {
                         xx: s.xx + Math.cos(s.ehang) * sRadius * sSpMult * bot.opt.radiusMult / 2,
                         yy: s.yy + Math.sin(s.ehang) * sRadius * sSpMult * bot.opt.radiusMult / 2,
                         snake: snake,
-                        radius: bot.getSnakeWidth(s.sc) / 2 * bot.opt.radiusMult / 2,
+                        radius: bot.opt.radiusMult / 2 * bot.snakeRadius,
                         head: true
                     };
 
