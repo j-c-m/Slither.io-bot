@@ -1247,8 +1247,10 @@ var bot = window.bot = (function () {
             };
 
             if (window.goalCoordinates) {
-                window.goalCoordinates.x = 0.75 * window.goalCoordinates.x + 0.25 * goal.x;
-                window.goalCoordinates.y = 0.75 * window.goalCoordinates.y + 0.25 * goal.y;
+                window.goalCoordinates.x = Math.round(
+                    0.75 * window.goalCoordinates.x + 0.25 * goal.x);
+                window.goalCoordinates.y = Math.round(
+                    0.75 * window.goalCoordinates.y + 0.25 * goal.y);
             } else {
                 window.goalCoordinates = {
                     x: Math.round(goal.x),
