@@ -347,7 +347,7 @@ var canvas = window.canvas = (function () {
             });
 
             var lower = [];
-            for (var i = 0, l = points.length; i < l; i++) {
+            for (let i = 0, l = points.length; i < l; i++) {
                 while (lower.length >= 2 && canvas.cross(
                     lower[lower.length - 2], lower[lower.length - 1], points[i]) <= 0) {
                     lower.pop();
@@ -356,7 +356,7 @@ var canvas = window.canvas = (function () {
             }
 
             var upper = [];
-            for (i = points.length - 1; i >= 0; i--) {
+            for (let i = points.length - 1; i >= 0; i--) {
                 while (upper.length >= 2 && canvas.cross(
                     upper[upper.length - 2], upper[upper.length - 1], points[i]) <= 0) {
                     upper.pop();
@@ -1110,29 +1110,27 @@ var bot = window.bot = (function () {
                     var offsetSet = false;
                     var offset = 0.0;
                     var cpolbody = {};
-                    for (var pts = 0, ptsNum = window.snakes[snake].pts.length; pts < ptsNum; pts++) {
+                    for (let pts = 0, ptsNum = window.snakes[snake].pts.length;
+                        pts < ptsNum; pts++) {
                         if (!window.snakes[snake].pts[pts].dying) {
                             var point = {
                                 x: window.snakes[snake].pts[pts].xx,
                                 y: window.snakes[snake].pts[pts].yy
                             };
-                            while (true) {
-                                if (!offsetSet || (enemyBodyOffsetDelta >= -bot.snakeWidth
-                                    && canvas.pointInPoly(point, cpolbody))) {
-                                    if (!offsetSet) {
-                                        offsetSet = true;
-                                    } else {
-                                        enemyBodyOffsetDelta -= 0.0625 * bot.snakeWidth;
-                                    }
-                                    offset = 0.5 * (bot.snakeWidth +
-                                        bot.getSnakeWidth(window.snakes[snake].sc)) +
-                                        enemyBodyOffsetDelta;
-                                    cpolbody = bot.bodyDangerZone(
-                                        offset, targetPoint, targetPointNormal, closePointDist,
-                                        pastTargetPoint, closePoint);
+                            while (!offsetSet || (enemyBodyOffsetDelta >= -bot.snakeWidth
+                                && canvas.pointInPoly(point, cpolbody))) {
+                                if (!offsetSet) {
+                                    offsetSet = true;
                                 } else {
-                                    break;
+                                    enemyBodyOffsetDelta -= 0.0625 * bot.snakeWidth;
                                 }
+                                offset = 0.5 * (bot.snakeWidth +
+                                    bot.getSnakeWidth(window.snakes[snake].sc)) +
+                                    enemyBodyOffsetDelta;
+                                cpolbody = bot.bodyDangerZone(
+                                    offset, targetPoint, targetPointNormal, closePointDist,
+                                    pastTargetPoint, closePoint);
+
                             }
                         }
                     }
@@ -1201,30 +1199,30 @@ var bot = window.bot = (function () {
             // angle wrt closePointTangent
             var currentCourse = Math.asin(Math.max(
                 -1, Math.min(1, bot.cos * closePointNormal.x + bot.sin * closePointNormal.y)));
-            if (true) {
-                // expand?
-                targetCourse = currentCourse + 0.125;
-                // enemy head nearby?
-                targetCourse = Math.min(
-                    targetCourse, -2 * (safeZone.r - enemyHeadDist) / bot.snakeWidth);
-                // enemy body nearby?
-                targetCourse = Math.min(
-                    targetCourse, targetCourse + (enemyBodyOffsetDelta - 0.0625 * bot.snakeWidth ) /
-                    bot.snakeWidth);
-                // small tail?
-                var tailBehind = bot.len - bot.pts[closePoint].len;
-                var targetDir = canvas.unitVector({
-                    x: bot.MID_X - head.x,
-                    y: bot.MID_Y - head.y
-                });
-                var driftQ = targetDir.x * closePointNormal.x + targetDir.y * closePointNormal.y;
-                var allowTail = bot.snakeWidth * (2 - 0.5 * driftQ);
-                if (window.visualDebugging) {
-                    canvas.drawLine(
-                        {x: head.x, y: head.y},
-                        {x: head.x + allowTail * targetDir.x, y: head.y + allowTail * targetDir.y},
-                        'red');
-                }
+
+            // expand?
+            targetCourse = currentCourse + 0.125;
+            // enemy head nearby?
+            targetCourse = Math.min(
+                targetCourse, -2 * (safeZone.r - enemyHeadDist) / bot.snakeWidth);
+            // enemy body nearby?
+            targetCourse = Math.min(
+                targetCourse, targetCourse + (enemyBodyOffsetDelta - 0.0625 * bot.snakeWidth) /
+                bot.snakeWidth);
+            // small tail?
+            var tailBehind = bot.len - bot.pts[closePoint].len;
+            var targetDir = canvas.unitVector({
+                x: bot.MID_X - head.x,
+                y: bot.MID_Y - head.y
+            });
+            var driftQ = targetDir.x * closePointNormal.x + targetDir.y * closePointNormal.y;
+            var allowTail = bot.snakeWidth * (2 - 0.5 * driftQ);
+            if (window.visualDebugging) {
+                canvas.drawLine(
+                    { x: head.x, y: head.y },
+                    { x: head.x + allowTail * targetDir.x, y: head.y + allowTail * targetDir.y },
+                    'red');
+
                 targetCourse = Math.min(
                     targetCourse,
                     (tailBehind - allowTail + 0.5 * (bot.snakeWidth - closePointDist)) /
@@ -1250,17 +1248,11 @@ var bot = window.bot = (function () {
                 y: head.y + goalDir.y * 4 * bot.snakeWidth
             };
 
-            if (window.goalCoordinates) {
-                window.goalCoordinates.x = Math.round(
-                    0.75 * window.goalCoordinates.x + 0.25 * goal.x);
-                window.goalCoordinates.y = Math.round(
-                    0.75 * window.goalCoordinates.y + 0.25 * goal.y);
-            } else {
-                window.goalCoordinates = {
-                    x: Math.round(goal.x),
-                    y: Math.round(goal.y)
-                };
-            }
+            window.goalCoordinates = {
+                x: Math.round(goal.x),
+                y: Math.round(goal.y)
+            };
+
             canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
         },
 
