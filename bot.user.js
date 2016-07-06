@@ -1,6 +1,7 @@
 /*
 The MIT License (MIT)
  Copyright (c) 2016 Jesse Miller <jmiller@jmiller.com>
+ Copyright (c) 2016 Alexey Korepanov <kaikaikai@yandex.ru>
  Copyright (c) 2016 Ermiya Eskandary & Théophile Cailliau and other contributors
  https://jmiller.mit-license.org/
 */
@@ -1111,7 +1112,10 @@ var bot = window.bot = (function () {
                     var cpolbody = {};
                     for (var pts = 0, ptsNum = window.snakes[snake].pts.length; pts < ptsNum; pts++) {
                         if (!window.snakes[snake].pts[pts].dying) {
-                            var point = {x: window.snakes[snake].pts[pts].xx, y: window.snakes[snake].pts[pts].yy};
+                            var point = {
+                                x: window.snakes[snake].pts[pts].xx,
+                                y: window.snakes[snake].pts[pts].yy
+                            };
                             while (true) {
                                 if (!offsetSet || (enemyBodyOffsetDelta >= -bot.snakeWidth
                                     && canvas.pointInPoly(point, cpolbody))) {
@@ -1176,9 +1180,9 @@ var bot = window.bot = (function () {
 
             // draw sample cpolbody
             if (window.visualDebugging) {
-                //var soffset = 0.5*bot.snakeWidth;
+                var soffset = 0.5 * bot.snakeWidth;
                 var scpolbody = bot.bodyDangerZone(
-                    offset, targetPoint, targetPointNormal,
+                    soffset, targetPoint, targetPointNormal,
                     closePointDist, pastTargetPoint, closePoint);
                 for (p = 0; p < scpolbody.length; p++) {
                     q = p + 1;
