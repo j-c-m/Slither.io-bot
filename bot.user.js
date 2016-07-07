@@ -1248,10 +1248,20 @@ var bot = window.bot = (function () {
                 y: head.y + goalDir.y * 4 * bot.snakeWidth
             };
 
-            window.goalCoordinates = {
-                x: Math.round(goal.x),
-                y: Math.round(goal.y)
-            };
+
+            if (window.goalCoordinates
+                && Math.abs(goal.x - window.goalCoordinates.x) < 1000
+                && Math.abs(goal.y - window.goalCoordinates.y) < 1000) {
+                window.goalCoordinates = {
+                    x: Math.round(goal.x * 0.25 + window.goalCoordinates.x * 0.75),
+                    y: Math.round(goal.y * 0.25 + window.goalCoordinates.y * 0.75)
+                };
+            } else {
+                window.goalCoordinates = {
+                    x: Math.round(goal.x),
+                    y: Math.round(goal.y)
+                };
+            }
 
             canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
         },
