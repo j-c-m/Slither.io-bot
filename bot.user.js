@@ -470,8 +470,16 @@ var bot = window.bot = (function () {
 
             bot.isBotRunning = false;
             window.forcing = true;
-            window.connect();
+            bot.connect();
             window.forcing = false;
+        },
+
+        connect: function () {
+            if (window.force_ip && window.force_port) {
+                window.forceServer(window.force_ip, window.force_port);
+            }
+
+            window.connect();
         },
 
         // angleBetween - get the smallest angle between two angles (0-pi)
@@ -1440,6 +1448,31 @@ var userInterface = window.userInterface = (function () {
     return {
         overlays: {},
 
+        initServerIp: function () {
+            var parent = document.getElementById('playh');
+            var serverDiv = document.createElement('div');
+            var serverIn = document.createElement('input');
+
+            serverDiv.style.width = '244px';
+            serverDiv.style.margin = '-30px auto';
+            serverDiv.style.boxShadow = 'rgb(0, 0, 0) 0px 6px 50px',
+            serverDiv.style.opacity = 1,
+            serverDiv.style.background = 'rgb(76, 68, 124)';
+            serverDiv.className = 'taho';
+            serverDiv.style.display = 'block';
+
+            serverIn.className = 'sumsginp';
+            serverIn.placeholder = '0.0.0.0:444';
+            serverIn.maxLength = 21;
+            serverIn.style.width = '220px';
+            serverIn.style.height = '24px';
+
+            serverDiv.appendChild(serverIn);
+            parent.appendChild(serverDiv);
+
+            userInterface.server = serverIn;
+        },
+
         initOverlays: function () {
             var botOverlay = document.createElement('div');
             botOverlay.style.position = 'fixed';
@@ -1549,6 +1582,18 @@ var userInterface = window.userInterface = (function () {
             userInterface.saveNick();
             userInterface.loadPreference('autoRespawn', false);
             userInterface.onPrefChange();
+
+            if (userInterface.server.value) {
+                let s = userInterface.server.value.split(':');
+                if (s.length === 2) {
+                    window.force_ip = s[0];
+                    window.force_port = s[1];
+                    bot.connect();
+                }
+            } else {
+                window.force_ip = undefined;
+                window.force_port = undefined;
+            }
         },
 
         // Preserve nickname
@@ -1642,10 +1687,6 @@ var userInterface = window.userInterface = (function () {
                 // 'ESC' to quickly respawn
                 if (e.keyCode === 27) {
                     bot.quickRespawn();
-                }
-                // Save nickname when you press "Enter"
-                if (e.keyCode === 13) {
-                    userInterface.saveNick();
                 }
                 userInterface.onPrefChange();
             }
@@ -1798,7 +1839,7 @@ var userInterface = window.userInterface = (function () {
                 }
 
                 if (window.autoRespawn) {
-                    window.connect();
+                    bot.connect();
                 }
             }
 
@@ -1849,6 +1890,15 @@ var userInterface = window.userInterface = (function () {
 
     // Hide top score
     userInterface.hideTop();
+
+    // force server
+    userInterface.initServerIp();
+    userInterface.server.addEventListener('keyup', function (e) {
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            window.play_btn.btnf.click();
+        }
+    });
 
     // Overlays
     userInterface.initOverlays();
