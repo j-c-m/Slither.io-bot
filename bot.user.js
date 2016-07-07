@@ -1305,15 +1305,14 @@ var bot = window.bot = (function () {
                     { x: head.x, y: head.y },
                     { x: head.x + allowTail * targetDir.x, y: head.y + allowTail * targetDir.y },
                     'red');
-
-                targetCourse = Math.min(
-                    targetCourse,
-                    (tailBehind - allowTail + 0.5 * (bot.snakeWidth - closePointDist)) /
-                    bot.snakeWidth);
-                // far away?
-                targetCourse = Math.min(
-                    targetCourse, - 0.5 * (closePointDist - 4 * bot.snakeWidth) / bot.snakeWidth);
             }
+            targetCourse = Math.min(
+                targetCourse,
+                (tailBehind - allowTail + 0.5 * (bot.snakeWidth - closePointDist)) /
+                bot.snakeWidth);
+            // far away?
+            targetCourse = Math.min(
+                targetCourse, - 0.5 * (closePointDist - 4 * bot.snakeWidth) / bot.snakeWidth);
             // final corrections
             // too fast in?
             targetCourse = Math.max(targetCourse, -0.75 * closePointDist / bot.snakeWidth);
