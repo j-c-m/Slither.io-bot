@@ -66,9 +66,10 @@ var canvas = window.canvas = (function () {
 
         // Map cordinates to Canvas cordinate shortcut
         mapToCanvas: function (point) {
-            var c = canvas.mapToMouse(point);
-            c = canvas.mouseToScreen(c);
-            c = canvas.screenToCanvas(c);
+            var c = {
+                x: window.mww2 + (point.x - window.view_xx) * window.gsc,
+                y: window.mhh2 + (point.y - window.view_yy) * window.gsc
+            };
             return c;
         },
 
