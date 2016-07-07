@@ -1192,7 +1192,7 @@ var bot = window.bot = (function () {
                 let scpolbody = bot.bodyDangerZone(
                     soffset, targetPoint, targetPointNormal,
                     closePointDist, pastTargetPoint, closePoint);
-                for (let p = 0, l=scpolbody.pts.length; p < l; p++) {
+                for (let p = 0, l = scpolbody.pts.length; p < l; p++) {
                     let q = p + 1;
                     if (q == l) {
                         q = 0;
