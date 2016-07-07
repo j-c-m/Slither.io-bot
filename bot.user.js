@@ -49,9 +49,11 @@ var canvas = window.canvas = (function () {
         // Convert screen coordinates to canvas coordinates.
         screenToCanvas: function (point) {
             var canvasX = window.csc *
-                (point.x * canvas.canvasRatio.x) - parseInt(window.mc.style.left);
+                (point.x * canvas.canvasRatio.x) -
+                Math.floor(window.ww / 2 - window.mww / 2);
             var canvasY = window.csc *
-                (point.y * canvas.canvasRatio.y) - parseInt(window.mc.style.top);
+                (point.y * canvas.canvasRatio.y) -
+                Math.floor(window.hh / 2 - window.mhh / 2);
             return { x: canvasX, y: canvasY };
         },
 
