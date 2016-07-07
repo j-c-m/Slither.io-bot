@@ -18,6 +18,9 @@ The MIT License (MIT)
 // @grant        none
 // ==/UserScript==
 
+/*jshint esnext: true */
+'use strict';
+
 // Custom logging function - disabled by default
 window.log = function () {
     if (window.logDebugging) {
@@ -426,6 +429,12 @@ var bot = window.bot = (function () {
         defaultAccel: 0,
         sectorBox: {},
         currentFood: {},
+        followCircleTransition : {
+            stage : 0,           // 0 - not started, 1 - in process, 2 - completed
+            progress: 0.0,
+            angle: 0.0,
+            safeRadius: 12.0    // in multiples of snake width
+        },
         opt: {
             // target fps
             targetFps: 30,
@@ -459,6 +468,11 @@ var bot = window.bot = (function () {
         MAP_R: 0,
         MAXARC: 0,
 
+        toggleBotEnabled: function () {
+            bot.isBotEnabled = !bot.isBotEnabled;
+            window.goalCoordinates = null;
+        },
+
         getSnakeWidth: function (sc) {
             if (sc === undefined) sc = window.snake.sc;
             return Math.round(sc * 29.0);
@@ -491,6 +505,18 @@ var bot = window.bot = (function () {
             r2 = (a2 - a1) % Math.PI;
 
             return r1 < r2 ? -r1 : r2;
+        },
+
+        // angleBetween1 - get the difference between two angles
+        // reduced to [-pi,pi)
+        angleBetween1: function (a1, a2) {
+            let r = (a2 - a1) % (2 * Math.PI);
+            if (r < -Math.PI) {
+                r += 2 * Math.PI;
+            } else if (r >= Math.PI) {
+                r -= 2 * Math.PI;
+            }
+            return r;
         },
 
         // Change heading to ang
@@ -985,6 +1011,53 @@ var bot = window.bot = (function () {
             return (poly);
         },
 
+        // check if we can start transition to the circle
+        followCircleTransitionCheck: function () {
+            // check size
+            if (bot.snakeLength < bot.opt.followCircleLength) {
+                return false;
+            }
+
+            // if size is enough:
+            // check that there are no snakes around in the radius of 12 body widths
+            let dMax = bot.followCircleTransition.safeRadius * bot.snakeWidth;
+            // mark the zone
+            if (window.visualDebugging) {
+                canvas.drawCircle(canvas.circle(
+                    window.snake.xx,
+                    window.snake.yy,
+                    dMax
+                ), 'red', false);
+            }
+            let dMax2 = dMax * dMax;
+            for (let snake = 0, snakesNum = window.snakes.length; snake < snakesNum; snake++) {
+                if (window.snakes[snake].id !== window.snake.id
+                    && window.snakes[snake].alive_amt === 1) {
+                    let d2 = canvas.getDistance2(window.snake.xx, window.snake.yy,
+                                                 window.snakes[snake].xx, window.snakes[snake].yy);
+                    if (d2 < dMax2) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        },
+
+        followCircleTransitionGo: function () {
+            // turn counterclockwise
+            bot.changeHeadingRel(0.3);
+            // and accelerate
+            window.setAcceleration(1);
+            // monitor progress: should stop once the full turn is made
+            bot.followCircleTransition.progress -= bot.angleBetween1(
+                bot.followCircleTransition.angle, window.snake.ang);
+            bot.followCircleTransition.angle = window.snake.ang;
+            if (bot.followCircleTransition.progress >= 2 * Math.PI) {
+                bot.followCircleTransition.stage = 2;
+            }
+            return;
+        },
+
         followCircleSelf: function () {
             // real points on snake, first head, last tail
             bot.pts = [];
@@ -1232,15 +1305,14 @@ var bot = window.bot = (function () {
                     { x: head.x, y: head.y },
                     { x: head.x + allowTail * targetDir.x, y: head.y + allowTail * targetDir.y },
                     'red');
-
-                targetCourse = Math.min(
-                    targetCourse,
-                    (tailBehind - allowTail + 0.5 * (bot.snakeWidth - closePointDist)) /
-                    bot.snakeWidth);
-                // far away?
-                targetCourse = Math.min(
-                    targetCourse, - 0.5 * (closePointDist - 4 * bot.snakeWidth) / bot.snakeWidth);
             }
+            targetCourse = Math.min(
+                targetCourse,
+                (tailBehind - allowTail + 0.5 * (bot.snakeWidth - closePointDist)) /
+                bot.snakeWidth);
+            // far away?
+            targetCourse = Math.min(
+                targetCourse, - 0.5 * (closePointDist - 4 * bot.snakeWidth) / bot.snakeWidth);
             // final corrections
             // too fast in?
             targetCourse = Math.max(targetCourse, -0.75 * closePointDist / bot.snakeWidth);
@@ -1259,9 +1331,7 @@ var bot = window.bot = (function () {
             };
 
 
-            if (window.goalCoordinates
-                && Math.abs(goal.x - window.goalCoordinates.x) < 1000
-                && Math.abs(goal.y - window.goalCoordinates.y) < 1000) {
+            if (window.goalCoordinates) {
                 window.goalCoordinates = {
                     x: Math.round(goal.x * 0.25 + window.goalCoordinates.x * 0.75),
                     y: Math.round(goal.y * 0.25 + window.goalCoordinates.y * 0.75)
@@ -1403,23 +1473,35 @@ var bot = window.bot = (function () {
         go: function () {
             bot.every();
 
-            if (bot.snakeLength > bot.opt.followCircleLength) {
+            if (bot.followCircleTransition.stage == 0) {
+                if (bot.followCircleTransitionCheck()) {
+                    bot.followCircleTransition.stage = 1;
+                    bot.followCircleTransition.progress = 0.0;
+                    bot.followCircleTransition.angle = window.snake.ang;
+                } else {
+                    if (bot.checkCollision() || bot.checkEncircle()) {
+                        bot.lookForFood = false;
+                        if (bot.foodTimeout) {
+                            window.clearTimeout(bot.foodTimeout);
+                            bot.foodTimeout = window.setTimeout(
+                                bot.foodTimer, 1000 / bot.opt.targetFps * bot.opt.foodDelay);
+                        }
+                    } else {
+                        bot.lookForFood = true;
+                        if (bot.foodTimeout === undefined) {
+                            bot.foodTimeout = window.setTimeout(
+                                bot.foodTimer, 1000 / bot.opt.targetFps * bot.opt.foodFrames);
+                        }
+                        window.setAcceleration(bot.foodAccel());
+                    }
+                }
+            }
+
+            if (bot.followCircleTransition.stage == 1) {
+                bot.followCircleTransitionGo();
+            } else if (bot.followCircleTransition.stage == 2) {
                 window.setAcceleration(bot.defaultAccel);
                 bot.followCircleSelf();
-            } else if (bot.checkCollision() || bot.checkEncircle()) {
-                bot.lookForFood = false;
-                if (bot.foodTimeout) {
-                    window.clearTimeout(bot.foodTimeout);
-                    bot.foodTimeout = window.setTimeout(
-                        bot.foodTimer, 1000 / bot.opt.targetFps * bot.opt.foodDelay);
-                }
-            } else {
-                bot.lookForFood = true;
-                if (bot.foodTimeout === undefined) {
-                    bot.foodTimeout = window.setTimeout(
-                        bot.foodTimer, 1000 / bot.opt.targetFps * bot.opt.foodFrames);
-                }
-                window.setAcceleration(bot.foodAccel());
             }
         },
 
@@ -1634,7 +1716,7 @@ var userInterface = window.userInterface = (function () {
             if (window.playing) {
                 // Letter `T` to toggle bot
                 if (e.keyCode === 84) {
-                    bot.isBotEnabled = !bot.isBotEnabled;
+                    bot.toggleBotEnabled();
                 }
                 // Letter 'U' to toggle debugging (console)
                 if (e.keyCode === 85) {
@@ -1706,7 +1788,7 @@ var userInterface = window.userInterface = (function () {
                         break;
                     // "Right click" to toggle bot in addition to the letter "T"
                     case 3:
-                        bot.isBotEnabled = !bot.isBotEnabled;
+                        bot.toggleBotEnabled();
                         break;
                 }
             } else {
