@@ -18,6 +18,8 @@ The MIT License (MIT)
 // @grant        none
 // ==/UserScript==
 
+'use strict';
+
 // Custom logging function - disabled by default
 window.log = function () {
     if (window.logDebugging) {
