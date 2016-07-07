@@ -459,6 +459,11 @@ var bot = window.bot = (function () {
         MAP_R: 0,
         MAXARC: 0,
 
+        toggleBotEnabled: function () {
+            bot.isBotEnabled = !bot.isBotEnabled;
+            window.goalCoordinates = null;
+        },
+
         getSnakeWidth: function (sc) {
             if (sc === undefined) sc = window.snake.sc;
             return Math.round(sc * 29.0);
@@ -1192,7 +1197,7 @@ var bot = window.bot = (function () {
                 let scpolbody = bot.bodyDangerZone(
                     soffset, targetPoint, targetPointNormal,
                     closePointDist, pastTargetPoint, closePoint);
-                for (let p = 0, l=scpolbody.pts.length; p < l; p++) {
+                for (let p = 0, l = scpolbody.pts.length; p < l; p++) {
                     let q = p + 1;
                     if (q == l) {
                         q = 0;
@@ -1259,9 +1264,7 @@ var bot = window.bot = (function () {
             };
 
 
-            if (window.goalCoordinates
-                && Math.abs(goal.x - window.goalCoordinates.x) < 1000
-                && Math.abs(goal.y - window.goalCoordinates.y) < 1000) {
+            if (window.goalCoordinates) {
                 window.goalCoordinates = {
                     x: Math.round(goal.x * 0.25 + window.goalCoordinates.x * 0.75),
                     y: Math.round(goal.y * 0.25 + window.goalCoordinates.y * 0.75)
@@ -1634,7 +1637,7 @@ var userInterface = window.userInterface = (function () {
             if (window.playing) {
                 // Letter `T` to toggle bot
                 if (e.keyCode === 84) {
-                    bot.isBotEnabled = !bot.isBotEnabled;
+                    bot.toggleBotEnabled();
                 }
                 // Letter 'U' to toggle debugging (console)
                 if (e.keyCode === 85) {
@@ -1706,7 +1709,7 @@ var userInterface = window.userInterface = (function () {
                         break;
                     // "Right click" to toggle bot in addition to the letter "T"
                     case 3:
-                        bot.isBotEnabled = !bot.isBotEnabled;
+                        bot.toggleBotEnabled();
                         break;
                 }
             } else {
