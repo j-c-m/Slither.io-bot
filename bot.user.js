@@ -1360,7 +1360,7 @@ var bot = window.bot = (function () {
                 bot.opt.radiusMult / 2 * bot.snakeRadius,
                 window.snake.yy + bot.sin * Math.min(1, bot.speedMult - 1) *
                 bot.opt.radiusMult / 2 * bot.snakeRadius,
-                bot.opt.radiusMult / 2 * bot.snakeRadius
+                bot.opt.radiusMult / 2 * bot.snakeRadius * Math.sqrt(bot.speedMult)
             );
 
 
