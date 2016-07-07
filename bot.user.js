@@ -1192,14 +1192,14 @@ var bot = window.bot = (function () {
                 let scpolbody = bot.bodyDangerZone(
                     soffset, targetPoint, targetPointNormal,
                     closePointDist, pastTargetPoint, closePoint);
-                for (let p = 0, l=scpolbody.length; p < l; p++) {
+                for (let p = 0, l=scpolbody.pts.length; p < l; p++) {
                     let q = p + 1;
                     if (q == l) {
                         q = 0;
                     }
                     canvas.drawLine(
-                        {x: scpolbody[p].x, y: scpolbody[p].y},
-                        {x: scpolbody[q].x, y: scpolbody[q].y},
+                        {x: scpolbody.pts[p].x, y: scpolbody.pts[p].y},
+                        {x: scpolbody.pts[q].x, y: scpolbody.pts[q].y},
                         'white');
                 }
             }
