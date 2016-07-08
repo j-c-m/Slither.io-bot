@@ -53,8 +53,8 @@ var canvas = window.canvas = (function () {
         // Radius also needs to scale by .gsc
         circleMapToCanvas: function (circle) {
             var newCircle = canvas.mapToCanvas({
-              x: circle.x,
-              y: circle.y
+                x: circle.x,
+                y: circle.y
             });
             return canvas.circle(
                 newCircle.x,
