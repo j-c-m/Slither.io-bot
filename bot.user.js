@@ -52,7 +52,10 @@ var canvas = window.canvas = (function () {
         // Map to Canvas coordinate conversion for drawing circles.
         // Radius also needs to scale by .gsc
         circleMapToCanvas: function (circle) {
-            var newCircle = canvas.mapToCanvas(circle);
+            var newCircle = canvas.mapToCanvas({
+              x: circle.x,
+              y: circle.y
+            });
             return canvas.circle(
                 newCircle.x,
                 newCircle.y,
