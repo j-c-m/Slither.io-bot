@@ -25,7 +25,7 @@ window.log = function () {
     }
 };
 
-var canvas = window.canvas = (function () {
+var canvas = window.canvas = (function (window) {
     return {
         // Spoofs moving the mouse to the provided coordinates.
         setMouseCoordinates: function (point) {
@@ -392,9 +392,9 @@ var canvas = window.canvas = (function () {
             return false;
         }
     };
-})();
+})(window);
 
-var bot = window.bot = (function () {
+var bot = window.bot = (function (window) {
     return {
         isBotRunning: false,
         isBotEnabled: true,
@@ -1415,9 +1415,9 @@ var bot = window.bot = (function () {
             bot.foodTimeout = undefined;
         }
     };
-})();
+})(window);
 
-var userInterface = window.userInterface = (function () {
+var userInterface = window.userInterface = (function (window, document) {
     // Save the original slither.io functions so we can modify them, or reenable them later.
     var original_keydown = document.onkeydown;
     var original_onmouseDown = window.onmousedown;
@@ -1851,10 +1851,10 @@ var userInterface = window.userInterface = (function () {
                 (enabled ? 'green;\">enabled' : 'red;\">disabled') + '</span>';
         }
     };
-})();
+})(window, document);
 
 // Main
-(function () {
+(function (window, document) {
     window.play_btn.btnf.addEventListener('click', userInterface.playButtonClickListener);
     document.onkeydown = userInterface.onkeydown;
     window.onmousedown = userInterface.onmousedown;
@@ -1904,4 +1904,4 @@ var userInterface = window.userInterface = (function () {
 
     // Start!
     userInterface.oefTimer();
-})();
+})(window, document);
