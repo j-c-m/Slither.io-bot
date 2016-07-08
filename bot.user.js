@@ -27,34 +27,10 @@ window.log = function () {
 
 var canvas = window.canvas = (function () {
     return {
-        // Ratio of screen size divided by canvas size.
-        canvasRatio: {
-            x: window.mc.width / window.ww,
-            y: window.mc.height / window.hh
-        },
-
         // Spoofs moving the mouse to the provided coordinates.
         setMouseCoordinates: function (point) {
             window.xm = point.x;
             window.ym = point.y;
-        },
-
-        // Convert snake-relative coordinates to absolute screen coordinates.
-        mouseToScreen: function (point) {
-            var screenX = point.x + (window.ww / 2);
-            var screenY = point.y + (window.hh / 2);
-            return { x: screenX, y: screenY };
-        },
-
-        // Convert screen coordinates to canvas coordinates.
-        screenToCanvas: function (point) {
-            var canvasX = window.csc *
-                (point.x * canvas.canvasRatio.x) -
-                Math.floor(window.ww / 2 - window.mww / 2);
-            var canvasY = window.csc *
-                (point.y * canvas.canvasRatio.y) -
-                Math.floor(window.hh / 2 - window.mhh / 2);
-            return { x: canvasX, y: canvasY };
         },
 
         // Convert map coordinates to mouse coordinates.
@@ -1867,16 +1843,6 @@ var userInterface = window.userInterface = (function () {
             }
         },
 
-        // Update the relation between the screen and the canvas.
-        onresize: function () {
-            window.resize();
-            // Canvas different size from the screen (often bigger).
-            canvas.canvasRatio = {
-                x: window.mc.width / window.ww,
-                y: window.mc.height / window.hh
-            };
-        },
-
         handleTextColor: function (enabled) {
             return '<span style=\"color:' +
                 (enabled ? 'green;\">enabled' : 'red;\">disabled') + '</span>';
@@ -1890,7 +1856,6 @@ var userInterface = window.userInterface = (function () {
     document.onkeydown = userInterface.onkeydown;
     window.onmousedown = userInterface.onmousedown;
     window.addEventListener('mouseup', userInterface.onmouseup);
-    window.onresize = userInterface.onresize;
 
     // Hide top score
     userInterface.hideTop();
