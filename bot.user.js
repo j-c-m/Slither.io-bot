@@ -323,10 +323,12 @@ var canvas = window.canvas = (function (window) {
             return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
         },
 
+        convexHullSort: function (a, b) {
+            return a.x == b.x ? a.y - b.y : a.x - b.x;
+        },
+
         convexHull: function (points) {
-            points.sort(function (a, b) {
-                return a.x == b.x ? a.y - b.y : a.x - b.x;
-            });
+            points.sort(canvas.convexHullSort);
 
             var lower = [];
             for (let i = 0, l = points.length; i < l; i++) {
@@ -1045,7 +1047,7 @@ var bot = window.bot = (function (window) {
 
             // get target point; this is an estimate where we land if we hurry
             var targetPointFar = 0.5 * bot.snakeWidth + Math.max(0, closePointDist) +
-                2 * bot.snakeWidth *
+                1.25 * bot.snakeWidth *
                 Math.max(0, bot.cos * closePointNormal.x + bot.sin * closePointNormal.y);
             var targetPoint = closePoint;
             while (targetPoint > 0
@@ -1193,10 +1195,15 @@ var bot = window.bot = (function (window) {
             // TAKE ACTION
 
             // expand?
-            let targetCourse = currentCourse + 0.125;
+            let targetCourse = currentCourse + 0.25;
             // enemy head nearby?
-            targetCourse = Math.min(
-                targetCourse, -2 * (safeZone.r - enemyHeadDist) / bot.snakeWidth);
+            let headProx = -(safeZone.r - enemyHeadDist) / bot.snakeWidth;
+            if (headProx > 0) {
+                headProx = 0.125 * headProx * headProx;
+            } else {
+                headProx = - 0.5 * headProx * headProx;
+            }
+            targetCourse = Math.min(targetCourse, headProx);
             // enemy body nearby?
             targetCourse = Math.min(
                 targetCourse, targetCourse + (enemyBodyOffsetDelta - 0.0625 * bot.snakeWidth) /
