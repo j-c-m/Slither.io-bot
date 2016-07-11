@@ -410,6 +410,10 @@ var bot = window.bot = (function (window) {
         defaultAccel: 0,
         sectorBox: {},
         currentFood: {},
+        MID_X: window.grd,
+        MID_Y: window.grd,
+        MAP_R: window.grd * 0.98,
+        MAXARC: 0,
         opt: {
             // target fps
             targetFps: 30,
@@ -435,13 +439,11 @@ var bot = window.bot = (function (window) {
             enCircleAllThreshold: 0.5625,
             // distance multiplier for enCircleAllThreshold
             enCircleDistanceMult: 20,
+            // target x/y for circle
+            followCircleTarget: { x: bot.MID_X, y: bot.MID_Y },
             // snake score to start circling on self
             followCircleLength: 5000
         },
-        MID_X: 0,
-        MID_Y: 0,
-        MAP_R: 0,
-        MAXARC: 0,
 
         getSnakeWidth: function (sc) {
             if (sc === undefined) sc = window.snake.sc;
@@ -1211,8 +1213,8 @@ var bot = window.bot = (function (window) {
             // small tail?
             var tailBehind = bot.len - bot.pts[closePoint].len;
             var targetDir = canvas.unitVector({
-                x: bot.MID_X - head.x,
-                y: bot.MID_Y - head.y
+                x: bot.opt.followCircleTarget.x - head.x,
+                y: bot.opt.followCircleTarget.y - head.y
             });
             var driftQ = targetDir.x * closePointNormal.x + targetDir.y * closePointNormal.y;
             var allowTail = bot.snakeWidth * (2 - 0.5 * driftQ);
@@ -1332,9 +1334,6 @@ var bot = window.bot = (function (window) {
         },
 
         every: function () {
-            bot.MID_X = window.grd;
-            bot.MID_Y = window.grd;
-            bot.MAP_R = window.grd * 0.98;
             bot.MAXARC = (2 * Math.PI) / bot.opt.arcSize;
 
             bot.sectorBoxSide = Math.floor(Math.sqrt(window.sectors.length)) * window.sector_size;
