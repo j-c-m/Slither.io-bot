@@ -914,6 +914,125 @@ var bot = window.bot = (function (window) {
             return false;
         },
 
+        populatePts: function () {
+            let x = window.snake.xx + window.snake.fx;  // ???
+            let y = window.snake.yy + window.snake.fy;  // ???
+            let l = 0.0;
+            bot.pts = [];
+            bot.pts.push({
+                x: x,
+                y: y,
+                len: l
+            });
+            for (let p = window.snake.pts.length - 1; p >= 0; p--) {
+                if (window.snake.pts[p].dying) {
+                    continue;
+                } else {
+                    let xx = window.snake.pts[p].xx + window.snake.pts[p].fx;  // ???
+                    let yy = window.snake.pts[p].yy + window.snake.pts[p].fy;  // ???
+                    let ll = l + Math.sqrt(canvas.getDistance2(x, y, xx, yy));
+                    bot.pts.push({
+                        x: xx,
+                        y: yy,
+                        len: ll
+                    });
+                    x = xx;
+                    y = yy;
+                    l = ll;
+                }
+            }
+            bot.len = l;
+        },
+
+        // returns a point on snake's body on given length from the head
+        // assumes that bot.pts is populated
+        smoothPoint: function (t) {
+            // range check
+            if (t >= bot.len) {
+                let tail = bot.pts[bot.pts.length - 1];
+                return {
+                    x: tail.x,
+                    y: tail.y
+                };
+            } else if (t <= 0 ) {
+                return {
+                    x: bot.pts[0].x,
+                    y: bot.pts[0].y
+                };
+            }
+            // binary search
+            let p = 0;
+            let q = bot.pts.length - 1;
+            while (q - p > 1) {
+                let m = Math.round((p + q) / 2);
+                if (t > bot.pts[m].len) {
+                    p = m;
+                } else {
+                    q = m;
+                }
+            }
+            // now q = p + 1, and the point is in between;
+            // compute approximation
+            let wp = bot.pts[q].len - t;
+            let wq = t - bot.pts[p].len;
+            let w = wp + wq;
+            return {
+                x: (wp * bot.pts[p].x + wq * bot.pts[q].x) / w,
+                y: (wp * bot.pts[p].y + wq * bot.pts[q].y) / w
+            };
+        },
+
+        // finds a point on snake's body closest to the head;
+        // returns length from the head
+        // excludes points close to the head
+        closestBodyPoint: function () {
+            let head = {
+                x: window.snake.xx,
+                y: window.snake.yy
+            };
+
+            let start_t = 0;
+
+            // skip head area
+            while (start_t < bot.len) {
+                let p = bot.smoothPoint(start_t);
+                let d2p = canvas.getDistance2(head.x, head.y, p.x, p.y);
+                let q = bot.smoothPoint(start_t + bot.snakeWidth);
+                let d2q = canvas.getDistance2(head.x, head.y, q.x, q.y);
+                start_t = Math.min(bot.len, start_t + bot.snakeWidth);
+                if (d2q < d2p) {
+                    break;
+                }
+            }
+
+            // rough approximation
+            let min_d2 = -1.0;
+            let min_t = 0.0;
+            for (let t = start_t ; t <= bot.len; t += bot.snakeWidth) {
+                let p = bot.smoothPoint(t);
+                let d2 = canvas.getDistance2(head.x, head.y, p.x, p.y);
+                if (min_d2 < 0 || d2 < min_d2) {
+                    min_d2 = d2;
+                    min_t = t;
+                }
+            }
+
+            // primitive fine approximation ::: optimize me
+            for (let res = 1; res <= 256; res *= 4) {
+                for (let t = min_t - bot.snakeWidth / res; t <= min_t + bot.snakeWidth/res;
+                     t += bot.snakeWidth / (4 * res)) {
+                    let p = bot.smoothPoint(t);
+                    let d2 = canvas.getDistance2(head.x, head.y, p.x, p.y);
+                    if (d2 < min_d2) {
+                        min_d2 = d2;
+                        min_t = t;
+                    }
+                }
+            }
+
+            return min_t;
+        },
+
         bodyDangerZone: function (
             offset, targetPoint, targetPointNormal, closePointDist, pastTargetPoint, closePoint) {
             var head = {
@@ -948,18 +1067,18 @@ var bot = window.bot = (function (window) {
                         offset * bot.sin
                 },
                 {
-                    x: bot.pts[targetPoint].x +
+                    x: targetPoint.x +
                         targetPointNormal.x * (offset + 0.5 * Math.max(closePointDist, 0)),
-                    y: bot.pts[targetPoint].y +
+                    y: targetPoint.y +
                         targetPointNormal.y * (offset + 0.5 * Math.max(closePointDist, 0))
                 },
                 {
-                    x: bot.pts[pastTargetPoint].x + targetPointNormal.x * offset,
-                    y: bot.pts[pastTargetPoint].y + targetPointNormal.y * offset
+                    x: pastTargetPoint.x + targetPointNormal.x * offset,
+                    y: pastTargetPoint.y + targetPointNormal.y * offset
                 },
-                bot.pts[pastTargetPoint],
-                bot.pts[targetPoint],
-                bot.pts[closePoint]
+                pastTargetPoint,
+                targetPoint,
+                closePoint
             ];
             pts = canvas.convexHull(pts);
             var poly = {
@@ -970,111 +1089,66 @@ var bot = window.bot = (function (window) {
         },
 
         followCircleSelf: function () {
-            // real points on snake, first head, last tail
-            bot.pts = [];
-            for (let pts = window.snake.pts.length - 1; pts >= 0 ; pts--) {
-                if (!window.snake.pts[pts].dying) {
-                    bot.pts.push({
-                        x: window.snake.pts[pts].xx,
-                        y: window.snake.pts[pts].yy,
-                        len: 0.0
-                    });
-                }
-            }
-            // add distance along the snake measured from the head
-            bot.len = 0.0;
-            for (let p = 1; p < bot.pts.length; p++) {
-                bot.len += Math.sqrt(canvas.getDistance2(
-                    bot.pts[p - 1].x, bot.pts[p - 1].y, bot.pts[p].x, bot.pts[p].y));
-                bot.pts[p].len = bot.len;
+
+            bot.populatePts();
+
+            // exit if too short
+            if (bot.len < 9 * bot.snakeWidth) {
+                return;
             }
 
             var head = {
                 x: window.snake.xx,
-                y: window.snake.yy };
+                y: window.snake.yy
+            };
 
-            // look for a point on own tail closest to window.snake.xx, window.snake.xx
-            // tail is everything farther than 8 widths from the head
-            var closePoint = -1;
-            var closePointDist = -1;
-            for (let p = bot.pts.length - 2; p >= 0 && bot.pts[p].len > 8 * bot.snakeWidth; p--) {
-                let pen = canvas.getDistance2(
-                    head.x, head.y, bot.pts[p].x, bot.pts[p].y);
-                if (closePointDist < 0 || pen < closePointDist) {
-                    closePointDist = pen;
-                    closePoint = p;
-                }
-            }
+            let closePointT = bot.closestBodyPoint();
+            let closePoint = bot.smoothPoint(closePointT);
 
-            if (closePoint < 0) {
-                return;
-            }
-
-            // a point just a bit further
-            var closePointNext = closePoint;
-            while (closePointNext > 0
-                && bot.pts[closePoint].len - bot.pts[closePointNext].len < bot.snakeWidth) {
-                closePointNext--;
-            }
-
-            // compute distance from the body at closePointDist
+            // approx tangent and normal vectors and closePoint
+            var closePointNext = bot.smoothPoint(closePointT - bot.snakeWidth);
             var closePointTangent = canvas.unitVector({
-                x: bot.pts[closePointNext].x - bot.pts[closePoint].x,
-                y: bot.pts[closePointNext].y - bot.pts[closePoint].y});
+                x: closePointNext.x - closePoint.x,
+                y: closePointNext.y - closePoint.y});
             var closePointNormal = {
                 x: -closePointTangent.y,
                 y:  closePointTangent.x
             };
-            closePointDist =
-                closePointNormal.x * (head.x - bot.pts[closePoint].x) +
-                closePointNormal.y * (head.y - bot.pts[closePoint].y);
+
+            // compute (oriented) distance from the body at closePointDist
+            var closePointDist = (head.x - closePoint.x) * closePointNormal.x +
+                (head.y - closePoint.y) * closePointNormal.y;
 
             // construct polygon for snake inside
-            var bot_pts_length = bot.pts.length;
-            var insidePolygonStart = 0;
-            while (bot.pts[insidePolygonStart].len < 5 * bot.snakeWidth
-                && insidePolygonStart < bot_pts_length - 1) {
-                insidePolygonStart ++;
+            var insidePolygonStartT = 5 * bot.snakeWidth;
+            var insidePolygonEndT = closePointT + 5 * bot.snakeWidth;
+            var insidePolygonPts = [
+                bot.smoothPoint(insidePolygonEndT),
+                bot.smoothPoint(insidePolygonStartT)
+            ];
+            for (let t = insidePolygonStartT; t < insidePolygonEndT; t += bot.snakeWidth) {
+                insidePolygonPts.push(bot.smoothPoint(t));
             }
-            var insidePolygonEnd = 0;
-            while (bot.pts[insidePolygonEnd].len - bot.pts[closePoint].len < 5 * bot.snakeWidth
-                && insidePolygonEnd < bot_pts_length - 1) {
-                insidePolygonEnd ++;
-            }
+
             var insidePolygon = canvas.addPolyBox({
-                pts: bot.pts.slice(insidePolygonStart, 1 + insidePolygonEnd)
+                pts: insidePolygonPts
             });
 
             // get target point; this is an estimate where we land if we hurry
             var targetPointFar = 0.5 * bot.snakeWidth + Math.max(0, closePointDist) +
                 1.25 * bot.snakeWidth *
                 Math.max(0, bot.cos * closePointNormal.x + bot.sin * closePointNormal.y);
-            var targetPoint = closePoint;
-            while (targetPoint > 0
-                && bot.pts[closePoint].len - bot.pts[targetPoint].len < 0.5 * targetPointFar) {
-                targetPoint--;
-            }
+            var targetPointT = closePointT - 0.5 * targetPointFar;
+            var targetPoint = bot.smoothPoint(targetPointT);
 
-            if (targetPoint == 0 || targetPoint == bot.pts.length - 1) {
-                return;
-            }
-            // normal vector at the target point
-            var targetPointNormal = canvas.unitVector({
-                x: -bot.pts[targetPoint - 1].y + bot.pts[targetPoint + 1].y,
-                y: bot.pts[targetPoint - 1].x - bot.pts[targetPoint + 1].x
-            });
-
-            var pastTargetPoint = targetPoint;
-            while (pastTargetPoint > 0
-                && bot.pts[targetPoint].len - bot.pts[pastTargetPoint].len < 3 * bot.snakeWidth) {
-                pastTargetPoint--;
-            }
+            var pastTargetPointT = targetPointT - 3 * bot.snakeWidth;
+            var pastTargetPoint = bot.smoothPoint(pastTargetPointT);
 
             // look for danger from enemies
             var enemyBodyOffsetDelta = 0.25 * bot.snakeWidth;
             var safeZone = {
-                x: bot.pts[targetPoint].x,
-                y: bot.pts[targetPoint].y,
+                x: targetPoint.x,
+                y: targetPoint.y,
                 r: 3 * targetPointFar,
                 r2: 0.0
             };
@@ -1123,7 +1197,7 @@ var bot = window.bot = (function (window) {
                                     bot.getSnakeWidth(window.snakes[snake].sc)) +
                                     enemyBodyOffsetDelta;
                                 cpolbody = bot.bodyDangerZone(
-                                    offset, targetPoint, targetPointNormal, closePointDist,
+                                    offset, targetPoint, closePointNormal, closePointDist,
                                     pastTargetPoint, closePoint);
 
                             }
@@ -1150,8 +1224,8 @@ var bot = window.bot = (function (window) {
             // mark closePoint
             if (window.visualDebugging) {
                 canvas.drawCircle(canvas.circle(
-                    bot.pts[closePoint].x,
-                    bot.pts[closePoint].y,
+                    closePoint.x,
+                    closePoint.y,
                     bot.snakeWidth * 0.25
                 ), 'white', false);
             }
@@ -1174,7 +1248,7 @@ var bot = window.bot = (function (window) {
             if (window.visualDebugging) {
                 let soffset = 0.5 * bot.snakeWidth;
                 let scpolbody = bot.bodyDangerZone(
-                    soffset, targetPoint, targetPointNormal,
+                    soffset, targetPoint, closePointNormal,
                     closePointDist, pastTargetPoint, closePoint);
                 for (let p = 0, l = scpolbody.pts.length; p < l; p++) {
                     let q = p + 1;
@@ -1209,7 +1283,7 @@ var bot = window.bot = (function (window) {
                 targetCourse, targetCourse + (enemyBodyOffsetDelta - 0.0625 * bot.snakeWidth) /
                 bot.snakeWidth);
             // small tail?
-            var tailBehind = bot.len - bot.pts[closePoint].len;
+            var tailBehind = bot.len - closePointT;
             var targetDir = canvas.unitVector({
                 x: bot.opt.followCircleTarget.x - head.x,
                 y: bot.opt.followCircleTarget.y - head.y
