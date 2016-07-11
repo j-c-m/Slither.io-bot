@@ -1211,8 +1211,8 @@ var bot = window.bot = (function (window) {
             // small tail?
             var tailBehind = bot.len - bot.pts[closePoint].len;
             var targetDir = canvas.unitVector({
-                x: bot.MID_X - head.x,
-                y: bot.MID_Y - head.y
+                x: bot.opt.followCircleTarget.x - head.x,
+                y: bot.opt.followCircleTarget.y - head.y
             });
             var driftQ = targetDir.x * closePointNormal.x + targetDir.y * closePointNormal.y;
             var allowTail = bot.snakeWidth * (2 - 0.5 * driftQ);
@@ -1336,6 +1336,13 @@ var bot = window.bot = (function (window) {
             bot.MID_Y = window.grd;
             bot.MAP_R = window.grd * 0.98;
             bot.MAXARC = (2 * Math.PI) / bot.opt.arcSize;
+
+            if (bot.opt.followCircleTarget === undefined) {
+                bot.opt.followCircleTarget = {
+                    x: Math.round(bot.MID_X - 3000 + Math.random() * 6000),
+                    y: Math.round(bot.MID_Y - 3000 + Math.random() * 6000)
+                };
+            }
 
             bot.sectorBoxSide = Math.floor(Math.sqrt(window.sectors.length)) * window.sector_size;
             bot.sectorBox = canvas.rect(
