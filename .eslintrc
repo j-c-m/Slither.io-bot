@@ -16,7 +16,8 @@
     "keyword-spacing": 1,
     "space-infix-ops": 1,
     "no-unneeded-ternary": 1,
-    "comma-spacing": 1
+    "comma-spacing": 1,
+    "semi": 1
   },
   "globals": {
     "GM_info" : true,
