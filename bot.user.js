@@ -994,16 +994,15 @@ var bot = window.bot = (function (window) {
 
             // skip head area
             let start_n = 0;
-            let start_d2 = canvas.getDistance2(head.x, head.y,
-                bot.pts[start_n].x, bot.pts[start_n].y);
+            let start_d2 = 0.0;
             while (start_n  < ptsLength) {
+                let prev_d2 = start_d2;
                 start_n ++;
-                let d2 = canvas.getDistance2(head.x, head.y,
+                start_d2 = canvas.getDistance2(head.x, head.y,
                     bot.pts[start_n].x, bot.pts[start_n].y);
-                if (d2 < start_d2) {
+                if (start_d2 < prev_d2) {
                     break;
                 }
-                start_d2 = d2;
             }
 
             if (start_n >= ptsLength || start_n <= 1) {
@@ -1026,6 +1025,8 @@ var bot = window.bot = (function (window) {
             let next_d2 = min_d2;
             if (min_n == ptsLength - 1) {
                 next_n = min_n - 1;
+                next_d2 = canvas.getDistance2(head.x, head.y,
+                    bot.pts[next_n].x, bot.pts[next_n].y);
             } else {
                 let d2m = canvas.getDistance2(head.x, head.y,
                     bot.pts[min_n - 1].x, bot.pts[min_n - 1].y);
