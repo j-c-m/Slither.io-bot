@@ -1319,7 +1319,7 @@ var bot = window.bot = (function (window) {
             }
             targetCourse = Math.min(
                 targetCourse,
-                (tailBehind - allowTail + 0.5 * (bot.snakeWidth - closePointDist)) /
+                (tailBehind - allowTail + (bot.snakeWidth - closePointDist)) /
                 bot.snakeWidth);
             // far away?
             targetCourse = Math.min(
