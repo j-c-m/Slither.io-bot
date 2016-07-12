@@ -918,12 +918,11 @@ var bot = window.bot = (function (window) {
             let x = window.snake.xx + window.snake.fx;  // ???
             let y = window.snake.yy + window.snake.fy;  // ???
             let l = 0.0;
-            bot.pts = [];
-            bot.pts.push({
+            bot.pts = [{
                 x: x,
                 y: y,
                 len: l
-            });
+            }];
             for (let p = window.snake.pts.length - 1; p >= 0; p--) {
                 if (window.snake.pts[p].dying) {
                     continue;
@@ -991,46 +990,67 @@ var bot = window.bot = (function (window) {
                 y: window.snake.yy
             };
 
-            let start_t = 0;
+            let ptsLength = bot.pts.length;
 
             // skip head area
-            while (start_t < bot.len) {
-                let p = bot.smoothPoint(start_t);
-                let d2p = canvas.getDistance2(head.x, head.y, p.x, p.y);
-                let q = bot.smoothPoint(start_t + bot.snakeWidth);
-                let d2q = canvas.getDistance2(head.x, head.y, q.x, q.y);
-                start_t = Math.min(bot.len, start_t + bot.snakeWidth);
-                if (d2q < d2p) {
+            let start_n = 0;
+            let start_d2 = canvas.getDistance2(head.x, head.y,
+                bot.pts[start_n].x, bot.pts[start_n].y);
+            while (start_n  < ptsLength) {
+                start_n ++;
+                let d2 = canvas.getDistance2(head.x, head.y,
+                    bot.pts[start_n].x, bot.pts[start_n].y);
+                if (d2 < start_d2) {
                     break;
                 }
+                start_d2 = d2;
             }
 
-            // rough approximation
-            let min_d2 = -1.0;
-            let min_t = 0.0;
-            for (let t = start_t ; t <= bot.len; t += bot.snakeWidth) {
-                let p = bot.smoothPoint(t);
-                let d2 = canvas.getDistance2(head.x, head.y, p.x, p.y);
-                if (min_d2 < 0 || d2 < min_d2) {
+            if (start_n >= ptsLength || start_n <= 1) {
+                return bot.len;
+            }
+
+            // find closets point in bot.pts
+            let min_n = start_n;
+            let min_d2 = start_d2;
+            for (let n = min_n + 1; n < ptsLength; n++) {
+                let d2 = canvas.getDistance2(head.x, head.y, bot.pts[n].x, bot.pts[n].y);
+                if (d2 < min_d2) {
+                    min_n = n;
                     min_d2 = d2;
-                    min_t = t;
                 }
             }
 
-            // primitive fine approximation ::: optimize me
-            for (let res = 1; res <= 256; res *= 4) {
-                for (let t = min_t - bot.snakeWidth / res; t <= min_t + bot.snakeWidth/res;
-                     t += bot.snakeWidth / (4 * res)) {
-                    let p = bot.smoothPoint(t);
-                    let d2 = canvas.getDistance2(head.x, head.y, p.x, p.y);
-                    if (d2 < min_d2) {
-                        min_d2 = d2;
-                        min_t = t;
-                    }
+            // find second closest point
+            let next_n = min_n;
+            let next_d2 = min_d2;
+            if (min_n == ptsLength - 1) {
+                next_n = min_n - 1;
+            } else {
+                let d2m = canvas.getDistance2(head.x, head.y,
+                    bot.pts[min_n - 1].x, bot.pts[min_n - 1].y);
+                let d2p = canvas.getDistance2(head.x, head.y,
+                    bot.pts[min_n + 1].x, bot.pts[min_n + 1].y);
+                if (d2m < d2p) {
+                    next_n = min_n - 1;
+                    next_d2 = d2m;
+                } else {
+                    next_n = min_n + 1;
+                    next_d2 = d2p;
                 }
             }
 
-            return min_t;
+            // compute approximation
+            let t2 = bot.pts[min_n].len - bot.pts[next_n].len;
+            t2 *= t2;
+
+            if (t2 == 0) {
+                return bot.pts[min_n].len;
+            } else {
+                let min_w = t2 - (min_d2 - next_d2);
+                let next_w = t2 + (min_d2 - next_d2);
+                return (bot.pts[min_n].len * min_w + bot.pts[next_n].len * next_w) / (2 * t2);
+            }
         },
 
         bodyDangerZone: function (
