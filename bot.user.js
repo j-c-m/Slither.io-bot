@@ -1115,6 +1115,10 @@ var bot = window.bot = (function (window) {
                 y:  closePointTangent.x
             };
 
+            // angle wrt closePointTangent
+            var currentCourse = Math.asin(Math.max(
+                -1, Math.min(1, bot.cos * closePointNormal.x + bot.sin * closePointNormal.y)));
+
             // compute (oriented) distance from the body at closePointDist
             var closePointDist = (head.x - closePoint.x) * closePointNormal.x +
                 (head.y - closePoint.y) * closePointNormal.y;
@@ -1135,10 +1139,16 @@ var bot = window.bot = (function (window) {
             });
 
             // get target point; this is an estimate where we land if we hurry
-            var targetPointFar = 0.5 * bot.snakeWidth + Math.max(0, closePointDist) +
-                1.25 * bot.snakeWidth *
-                Math.max(0, bot.cos * closePointNormal.x + bot.sin * closePointNormal.y);
-            var targetPointT = closePointT - 0.5 * targetPointFar;
+            var targetPointT = closePointT;
+            var targetPointFar = 0.0;
+            let targetPointStep = bot.snakeWidth / 64;
+            for (let h = closePointDist, a = currentCourse; h >= 0.125 * bot.snakeWidth; ) {
+                targetPointT -= targetPointStep;
+                targetPointFar += targetPointStep * Math.cos(a);
+                h += targetPointStep * Math.sin(a);
+                a = Math.max(-Math.PI / 4, a - targetPointStep / bot.snakeWidth);
+            }
+
             var targetPoint = bot.smoothPoint(targetPointT);
 
             var pastTargetPointT = targetPointT - 3 * bot.snakeWidth;
@@ -1146,13 +1156,6 @@ var bot = window.bot = (function (window) {
 
             // look for danger from enemies
             var enemyBodyOffsetDelta = 0.25 * bot.snakeWidth;
-            var safeZone = {
-                x: targetPoint.x,
-                y: targetPoint.y,
-                r: 3 * targetPointFar,
-                r2: 0.0
-            };
-            safeZone.r2 = safeZone.r * safeZone.r;
             var enemyHeadDist2 = 64 * 64 * bot.snakeWidth * bot.snakeWidth;
             for (let snake = 0, snakesNum = window.snakes.length; snake < snakesNum; snake++) {
                 if (window.snakes[snake].id !== window.snake.id
@@ -1171,8 +1174,10 @@ var bot = window.bot = (function (window) {
                     if (!canvas.pointInPoly(enemyHead, insidePolygon)) {
                         enemyHeadDist2 = Math.min(
                             enemyHeadDist2,
-                            canvas.getDistance2(enemyHead.x,  enemyHead.y, safeZone.x, safeZone.y),
-                            canvas.getDistance2(enemyAhead.x, enemyAhead.y, safeZone.x, safeZone.y)
+                            canvas.getDistance2(enemyHead.x,  enemyHead.y,
+                                targetPoint.x, targetPoint.y),
+                            canvas.getDistance2(enemyAhead.x, enemyAhead.y,
+                                targetPoint.x, targetPoint.y)
                             );
                     }
                     // bodies
@@ -1233,13 +1238,13 @@ var bot = window.bot = (function (window) {
             // mark safeZone
             if (window.visualDebugging) {
                 canvas.drawCircle(canvas.circle(
-                    safeZone.x,
-                    safeZone.y,
-                    safeZone.r
+                    targetPoint.x,
+                    targetPoint.y,
+                    bot.snakeWidth + 2 * targetPointFar
                 ), 'white', false);
                 canvas.drawCircle(canvas.circle(
-                    safeZone.x,
-                    safeZone.y,
+                    targetPoint.x,
+                    targetPoint.y,
                     0.2 * bot.snakeWidth
                 ), 'white', false);
             }
@@ -1262,16 +1267,12 @@ var bot = window.bot = (function (window) {
                 }
             }
 
-            // angle wrt closePointTangent
-            var currentCourse = Math.asin(Math.max(
-                -1, Math.min(1, bot.cos * closePointNormal.x + bot.sin * closePointNormal.y)));
-
             // TAKE ACTION
 
             // expand?
             let targetCourse = currentCourse + 0.25;
             // enemy head nearby?
-            let headProx = -(safeZone.r - enemyHeadDist) / bot.snakeWidth;
+            let headProx = -1.0 - (2 * targetPointFar - enemyHeadDist) / bot.snakeWidth;
             if (headProx > 0) {
                 headProx = 0.125 * headProx * headProx;
             } else {
