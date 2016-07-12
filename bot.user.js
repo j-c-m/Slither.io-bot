@@ -400,7 +400,7 @@ var bot = window.bot = (function (window) {
     return {
         isBotRunning: false,
         isBotEnabled: true,
-        lookForFood: false,
+        stage: 'grow',
         collisionPoints: [],
         collisionAngles: [],
         foodAngles: [],
@@ -421,10 +421,10 @@ var bot = window.bot = (function (window) {
             foodAccelSz: 200,
             // maximum angle of food to trigger acceleration
             foodAccelDa: Math.PI / 2,
-            // how many frames per food check
-            foodFrames: 2,
-            // how many frames to delay food check after collision
-            foodDelay: 15,
+            // how many frames per action
+            actionFrames: 2,
+            // how many frames to delay action after collision
+            collisionDelay: 15,
             // base speed
             speedBase: 5.78,
             // front angle size
@@ -854,6 +854,7 @@ var bot = window.bot = (function (window) {
         checkEncircle: function () {
             var enSnake = [];
             var high = 0;
+            var highSnake;
             var enAll = 0;
 
             for (var i = 0; i < bot.collisionAngles.length; i++) {
@@ -864,7 +865,10 @@ var bot = window.bot = (function (window) {
                     } else {
                         enSnake[s] = 1;
                     }
-                    if (enSnake[s] > high) high = enSnake[s];
+                    if (enSnake[s] > high) {
+                        high = enSnake[s];
+                        highSnake = s;
+                    }
 
                     if (bot.collisionAngles[i].distance <
                         Math.pow(bot.snakeRadius * bot.opt.enCircleDistanceMult, 2)) {
@@ -876,7 +880,11 @@ var bot = window.bot = (function (window) {
             if (high > bot.MAXARC * bot.opt.enCircleThreshold) {
                 bot.headingBestAngle();
 
-                if (high !== bot.MAXARC) window.setAcceleration(1);
+                if (high !== bot.MAXARC && window.snakes[highSnake].sp > 10) {
+                    window.setAcceleration(1);
+                } else {
+                    window.setAcceleration(bot.defaultAccel);
+                }
 
                 if (window.visualDebugging) {
                     canvas.drawCircle(canvas.circle(
@@ -1331,6 +1339,26 @@ var bot = window.bot = (function (window) {
             return bot.defaultAccel;
         },
 
+        toCircle: function () {
+            for (var i = 0; i < window.snake.pts.length && window.snake.pts[i].dying; i++);
+            var tailCircle = canvas.circle(
+                window.snake.pts[i].xx,
+                window.snake.pts[i].yy,
+                bot.headCircle.radius
+            );
+
+            if (window.visualDebugging) {
+                canvas.drawCircle(tailCircle, 'blue', false);
+            }
+
+            window.setAcceleration(bot.defaultAccel);
+            bot.changeHeadingRel(Math.PI / 32);
+
+            if (canvas.circleIntersect(bot.headCircle, tailCircle)) {
+                bot.stage = 'circle';
+            }
+        },
+
         every: function () {
             bot.MID_X = window.grd;
             bot.MID_Y = window.grd;
@@ -1339,8 +1367,8 @@ var bot = window.bot = (function (window) {
 
             if (bot.opt.followCircleTarget === undefined) {
                 bot.opt.followCircleTarget = {
-                    x: Math.round(bot.MID_X - 3000 + Math.random() * 6000),
-                    y: Math.round(bot.MID_Y - 3000 + Math.random() * 6000)
+                    x: bot.MID_X,
+                    y: bot.MID_Y
                 };
             }
 
@@ -1398,35 +1426,43 @@ var bot = window.bot = (function (window) {
         go: function () {
             bot.every();
 
-            if (bot.snakeLength > bot.opt.followCircleLength) {
+            if (bot.snakeLength < 50) {
+                bot.stage = 'grow';
+            }
+
+            if (bot.stage === 'circle') {
                 window.setAcceleration(bot.defaultAccel);
                 bot.followCircleSelf();
             } else if (bot.checkCollision() || bot.checkEncircle()) {
-                bot.lookForFood = false;
-                if (bot.foodTimeout) {
-                    window.clearTimeout(bot.foodTimeout);
-                    bot.foodTimeout = window.setTimeout(
-                        bot.foodTimer, 1000 / bot.opt.targetFps * bot.opt.foodDelay);
+                if (bot.actionTimeout) {
+                    window.clearTimeout(bot.actionTimeout);
+                    bot.actionTimeout = window.setTimeout(
+                        bot.actionTimer, 1000 / bot.opt.targetFps * bot.opt.collisionDelay);
                 }
             } else {
-                bot.lookForFood = true;
-                if (bot.foodTimeout === undefined) {
-                    bot.foodTimeout = window.setTimeout(
-                        bot.foodTimer, 1000 / bot.opt.targetFps * bot.opt.foodFrames);
+                if (bot.snakeLength > bot.opt.followCircleLength) {
+                    bot.stage = 'tocircle';
+                }
+                if (bot.actionTimeout === undefined) {
+                    bot.actionTimeout = window.setTimeout(
+                        bot.actionTimer, 1000 / bot.opt.targetFps * bot.opt.actionFrames);
                 }
                 window.setAcceleration(bot.foodAccel());
             }
         },
 
         // Timer version of food check
-        foodTimer: function () {
-            if (window.playing && bot.lookForFood &&
-                window.snake !== null && window.snake.alive_amt === 1) {
-                bot.computeFoodGoal();
-                window.goalCoordinates = bot.currentFood;
-                canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+        actionTimer: function () {
+            if (window.playing && window.snake !== null && window.snake.alive_amt === 1) {
+                if (bot.stage === 'grow') {
+                    bot.computeFoodGoal();
+                    window.goalCoordinates = bot.currentFood;
+                    canvas.setMouseCoordinates(canvas.mapToMouse(window.goalCoordinates));
+                } else if (bot.stage === 'tocircle') {
+                    bot.toCircle();
+                }
             }
-            bot.foodTimeout = undefined;
+            bot.actionTimeout = undefined;
         }
     };
 })(window);
@@ -1829,6 +1865,7 @@ var userInterface = window.userInterface = (function (window, document) {
                 bot.go();
             } else if (bot.isBotEnabled && bot.isBotRunning) {
                 bot.isBotRunning = false;
+
                 if (window.lastscore && window.lastscore.childNodes[1]) {
                     bot.scores.push(parseInt(window.lastscore.childNodes[1].innerHTML));
                     bot.scores.sort(function (a, b) { return b - a; });
