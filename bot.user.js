@@ -1426,7 +1426,7 @@ var bot = window.bot = (function (window) {
         go: function () {
             bot.every();
 
-            if (bot.snakeLength < 50) {
+            if (bot.snakeLength < bot.opt.followCircleLength) {
                 bot.stage = 'grow';
             }
 
