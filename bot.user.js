@@ -1480,6 +1480,7 @@ var userInterface = window.userInterface = (function (window, document) {
 
     return {
         overlays: {},
+        gfxEnabled: true,
 
         initServerIp: function () {
             var parent = document.getElementById('playh');
@@ -1581,6 +1582,40 @@ var userInterface = window.userInterface = (function (window, document) {
                 userInterface.overlays[okey].style.visibility = oVis;
                 window.visualDebugging = oVis === 'visible';
             });
+        },
+
+
+        toggleGfx: function () {
+            if (userInterface.gfxEnabled) {
+                var c = window.mc.getContext('2d');
+                c.save();
+                c.fillStyle = "#000000",
+                c.fillRect(0, 0, window.mww, window.mhh),
+                c.restore();
+
+                var d = document.createElement('div');
+                d.style.position = 'fixed';
+                d.style.top = '50%';
+                d.style.left = '50%';
+                d.style.width = '200px';
+                d.style.height = '60px';
+                d.style.color = '#C0C0C0';
+                d.style.fontFamily = 'Consolas, Verdana';
+                d.style.zIndex = 999;
+                d.style.margin = '-30px 0 0 -100px';
+                d.style.fontSize = '20px';
+                d.style.textAlign = 'center';
+                d.className = 'nsi';
+                document.body.appendChild(d);
+                userInterface.gfxOverlay = d;
+
+                window.lbf.innerHTML = '';
+            } else {
+                document.body.removeChild(userInterface.gfxOverlay);
+                userInterface.gfxOverlay = undefined;
+            }
+
+            userInterface.gfxEnabled = !userInterface.gfxEnabled;
         },
 
         // Save variable to local storage
@@ -1688,6 +1723,10 @@ var userInterface = window.userInterface = (function (window, document) {
                 // Letter 'H' to toggle hidden mode
                 if (e.keyCode === 72) {
                     userInterface.toggleOverlays();
+                }
+                // Letter 'G' to toggle graphics
+                if (e.keyCode === 71) {
+                    userInterface.toggleGfx();
                 }
                 // Letter 'O' to change rendermode (visual)
                 if (e.keyCode === 79) {
@@ -1811,9 +1850,9 @@ var userInterface = window.userInterface = (function (window, document) {
 
         onFrameUpdate: function () {
             // Botstatus overlay
-            var oContent = [];
-
             if (window.playing && window.snake !== null) {
+                let oContent = [];
+
                 oContent.push('fps: ' + userInterface.framesPerSecond.fps);
 
                 // Display the X and Y of the snake
@@ -1830,15 +1869,24 @@ var userInterface = window.userInterface = (function (window, document) {
                     }
                 }
 
+                userInterface.overlays.botOverlay.innerHTML = oContent.join('<br/>');
+
+                if (userInterface.gfxOverlay) {
+                    let gContent = [];
+
+                    gContent.push('<b>' + window.snake.nk + '</b>');
+                    gContent.push(bot.snakeLength);
+                    gContent.push('[' + window.rank + '/' + window.snake_count + ']');
+
+                    userInterface.gfxOverlay.innerHTML = gContent.join('<br/>');
+                }
+
                 if (window.bso !== undefined && userInterface.overlays.serverOverlay.innerHTML !==
                     window.bso.ip + ':' + window.bso.po) {
                     userInterface.overlays.serverOverlay.innerHTML =
                         window.bso.ip + ':' + window.bso.po;
                 }
             }
-
-            userInterface.overlays.botOverlay.innerHTML = oContent.join('<br/>');
-
 
             if (window.playing && window.visualDebugging) {
                 // Only draw the goal when a bot has a goal.
@@ -1857,7 +1905,11 @@ var userInterface = window.userInterface = (function (window, document) {
             var start = Date.now();
             canvas.maintainZoom();
             original_oef();
-            original_redraw();
+            if (userInterface.gfxEnabled) {
+                original_redraw();
+            } else {
+                window.visualDebugging = false;
+            }
 
             if (window.playing && bot.isBotEnabled && window.snake !== null) {
                 window.onmousemove = function () { };
