@@ -986,8 +986,8 @@ var bot = window.bot = (function (window) {
         // excludes points close to the head
         closestBodyPoint: function () {
             let head = {
-                x: window.snake.xx,
-                y: window.snake.yy
+                x: window.snake.xx + window.snake.fx,
+                y: window.snake.yy + window.snake.fy
             };
 
             let ptsLength = bot.pts.length;
@@ -1057,8 +1057,8 @@ var bot = window.bot = (function (window) {
         bodyDangerZone: function (
             offset, targetPoint, targetPointNormal, closePointDist, pastTargetPoint, closePoint) {
             var head = {
-                x: window.snake.xx,
-                y: window.snake.yy
+                x: window.snake.xx + window.snake.fx,
+                y: window.snake.yy + window.snake.fy
             };
             var pts = [
                 {
@@ -1119,8 +1119,8 @@ var bot = window.bot = (function (window) {
             }
 
             var head = {
-                x: window.snake.xx,
-                y: window.snake.yy
+                x: window.snake.xx + window.snake.fx,
+                y: window.snake.yy + window.snake.fy
             };
 
             let closePointT = bot.closestBodyPoint();
