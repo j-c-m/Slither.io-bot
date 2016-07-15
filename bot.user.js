@@ -1938,7 +1938,13 @@ var userInterface = window.userInterface = (function (window, document) {
             }
 
             userInterface.onFrameUpdate();
-            setTimeout(userInterface.oefTimer, (1000 / bot.opt.targetFps) - (Date.now() - start));
+
+            if (!bot.isBotEnabled && !window.no_raf) {
+                window.raf(userInterface.oefTimer);
+            } else {
+                setTimeout(
+                    userInterface.oefTimer, (1000 / bot.opt.targetFps) - (Date.now() - start));
+            }
         },
 
         // Quit to menu
