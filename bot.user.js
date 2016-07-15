@@ -953,6 +953,38 @@ var bot = window.bot = (function (window) {
             bot.len = l;
         },
 
+        // set the direction of rotation based on the velocity of
+        // the head with respect to the center of mass
+        determineCircleDirection: function () {
+            // find center mass (cx, cy)
+            let cx = 0.0;
+            let cy = 0.0;
+            let pn = bot.pts.length;
+            for (let p = 0; p < pn; p++) {
+                cx += bot.pts[p].x;
+                cy += bot.pts[p].y;
+            }
+            cx /= pn;
+            cy /= pn;
+
+            // vector from (cx, cy) to the head
+            let head = {
+                x: window.snake.xx + window.snake.fx,
+                y: window.snake.yy + window.snake.fy
+            };
+            let dx = head.x - cx;
+            let dy = head.y - cy;
+
+            // check the sign of dot product of (bot.cos, bot.sin) and (-dy, dx)
+            if (- dy * bot.cos + dx * bot.sin > 0) {
+                // clockwise
+                bot.opt.followCircleDirection = -1;
+            } else {
+                // couter clockwise
+                bot.opt.followCircleDirection = +1;
+            }
+        },
+
         // returns a point on snake's body on given length from the head
         // assumes that bot.pts is populated
         smoothPoint: function (t) {
@@ -1130,9 +1162,10 @@ var bot = window.bot = (function (window) {
 
         followCircleSelf: function () {
 
+            bot.populatePts();
+            bot.determineCircleDirection();
             const o = bot.opt.followCircleDirection;
 
-            bot.populatePts();
 
             // exit if too short
             if (bot.len < 9 * bot.snakeWidth) {
