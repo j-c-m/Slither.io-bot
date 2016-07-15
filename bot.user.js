@@ -1430,6 +1430,10 @@ var bot = window.bot = (function (window) {
                 bot.stage = 'grow';
             }
 
+            if (bot.currentFood && bot.stage !== 'grow') {
+                bot.currentFood = undefined;
+            }
+
             if (bot.stage === 'circle') {
                 window.setAcceleration(bot.defaultAccel);
                 bot.followCircleSelf();
