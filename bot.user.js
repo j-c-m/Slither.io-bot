@@ -412,7 +412,7 @@ var bot = window.bot = (function (window) {
         currentFood: {},
         opt: {
             // target fps
-            targetFps: 30,
+            targetFps: 20,
             // size of arc for collisionAngles
             arcSize: Math.PI / 8,
             // radius multiple for circle intersects
@@ -424,7 +424,7 @@ var bot = window.bot = (function (window) {
             // how many frames per action
             actionFrames: 2,
             // how many frames to delay action after collision
-            collisionDelay: 15,
+            collisionDelay: 10,
             // base speed
             speedBase: 5.78,
             // front angle size
