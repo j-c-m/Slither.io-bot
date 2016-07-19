@@ -22,6 +22,8 @@ U | Log debugging
 Y | Visual debugging
 I | Automatic Respawning
 O | **Mobile rendering - Try this if you experience lag**
+G | No graphics mode
+H | Hide overlays
 A / S | Collision radius multiplier increase / decrease
 Z | Reset zoom
 Mouse wheel | Zoom in/out
