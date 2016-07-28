@@ -1986,8 +1986,6 @@ var userInterface = window.userInterface = (function (window, document) {
             oContent.push('version: ' + GM_info.script.version);
             oContent.push('[T] bot: ' + ht(bot.isBotEnabled));
             oContent.push('[O] mobile rendering: ' + ht(window.mobileRender));
-            oContent.push('[G] no graphics mode: ' + ht(!userInterface.gfxEnabled));
-            oContent.push('[H] overlays');
             oContent.push('[A/S] radius multiplier: ' + bot.opt.radiusMult);
             oContent.push('[I] auto respawn: ' + ht(window.autoRespawn));
             oContent.push('[Y] visual debugging: ' + ht(window.visualDebugging));
